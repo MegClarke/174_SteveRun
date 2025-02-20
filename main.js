@@ -65,7 +65,7 @@ function animate() {
       track.forEach((train) => {
         train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
         if (train.positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
-          const removedTrain = trains.shift(); // Remove train that passed a certain point
+          const removedTrain = track.shift(); 
           scene.remove(removedTrain.mesh);
           scene.remove(removedTrain.wireframe);
         }
