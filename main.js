@@ -29,7 +29,6 @@ scene.add(yAxis);
 scene.add(zAxis);
 
 
-// ***** Assignment 2 *****
 // Setting up the lights
 const pointLight = new THREE.PointLight(0xffffff, 100, 100);
 pointLight.position.set(5, 5, 5); // Position the light
@@ -48,49 +47,61 @@ const phong_material = new THREE.MeshPhongMaterial({
 });
 
 
-// Start here.
+// Const Variables
+const h_st = 0.8
+const w_st = 0.6
+const d_st = 2 //arbitrary and should be variable
 
-const l = 0.5
-const positions = new Float32Array([
+const h_tt = 1.6
+const w_tt = 0.6
+const d_tt = 2 //arbitrary and should be variable
+
+const h_p = 1.2
+const w_p = 0.4
+const max_h_jump = 1
+
+const w_track = 0.6
+
+//short train
+const short_train_positions = new Float32Array([
     // Front face
-    -l, -l,  l, // 0
-     l, -l,  l, // 1
-     l,  l,  l, // 2
-    -l,  l,  l, // 3
+    -h_st, -w_st,  d_st / 2, // 0
+     h_st, -w_st,  d_st / 2, // 1
+     h_st,  w_st,  d_st / 2, // 2
+    -h_st,  w_st,  d_st / 2, // 3
 
     // Left face
-    -l, -l, -l, // 4
-    -l, -l,  l, // 5
-    -l,  l,  l, // 6 
-    -l,  l, -l, // 7
+    -h_st, -w_st, -d_st / 2, // 4
+    -h_st, -w_st,  d_st / 2, // 5
+    -h_st,  w_st,  d_st / 2, // 6
+    -h_st,  w_st, -d_st / 2, // 7
   
     // Top face
-    -l,  l,  l, // 8
-     l,  l,  l, // 9
-     l,  l, -l, // 10
-    -l,  l, -l, // 11
+    -h_st,  w_st,  d_st / 2, // 8
+     h_st,  w_st,  d_st / 2, // 9
+     h_st,  w_st, -d_st / 2, // 10
+    -h_st,  w_st, -d_st / 2, // 11
   
     // Bottom face
-    -l, -l,  l, // 12
-    -l, -l, -l, // 13
-     l, -l, -l, // 14
-     l, -l,  l, // 15
-  
+    -h_st, -w_st,  d_st / 2, // 12
+    -h_st, -w_st, -d_st / 2, // 13
+     h_st, -w_st, -d_st / 2, // 14
+     h_st, -w_st,  d_st / 2, // 15
+
     // Right face
-     l, -l,  l, // 16
-     l, -l, -l, // 17
-     l,  l, -l, // 18
-     l,  l,  l, // 19
+     h_st, -w_st,  d_st / 2, // 16
+     h_st, -w_st, -d_st / 2, // 17
+     h_st,  w_st, -d_st / 2, // 18
+     h_st,  w_st,  d_st / 2, // 19
   
     // Back face
-     l, -l, -l, // 20
-    -l, -l, -l, // 21
-    -l,  l, -l, // 22
-     l,  l, -l, // 23
-  
+     h_st, -w_st, -d_st / 2, // 20
+    -h_st, -w_st, -d_st / 2, // 21
+    -h_st,  w_st, -d_st / 2, // 22
+     h_st,  w_st, -d_st / 2, // 23
   ]);
   
-  const indices = [
+  const short_train_indices = [
     // Front face
     0, 1, 2,
     0, 2, 3,
@@ -117,7 +128,7 @@ const positions = new Float32Array([
   ];
   
   // Compute normals
-  const normals = new Float32Array([
+  const short_train_normals = new Float32Array([
     // Front face
     0, 0, 1,
     0, 0, 1,
@@ -155,51 +166,53 @@ const positions = new Float32Array([
     0, 0, -1
   ]);
 
-const custom_cube_geometry = new THREE.BufferGeometry();
-custom_cube_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-custom_cube_geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-custom_cube_geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
+const short_train_geometry = new THREE.BufferGeometry();
+short_train_geometry.setAttribute('position', new THREE.BufferAttribute(short_train_positions, 3));
+short_train_geometry.setAttribute('normal', new THREE.BufferAttribute(short_train_normals, 3));
+short_train_geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(short_train_indices), 1));
 
-const cube_mesh_obj = new THREE.Mesh( custom_cube_geometry, phong_material );
-//scene.add(cube);
+const short_train_obj = new THREE.Mesh( short_train_geometry, phong_material );
 
 // wireframe geometry
-const wireframe_vertices = new Float32Array([
+const st_wireframe_vertices = new Float32Array([
   // Front face
-      -l, -l, l,
-      l, -l, l,
-      l, -l, l,
-      l, l, l,
-      l, l, l,
-      -l, l, l,
-      -l, l, l,
-      -l, -l, l,
+    -h_st, -w_st, d_st / 2,
+     h_st, -w_st, d_st / 2,
+     h_st, -w_st, d_st / 2,
+     h_st, w_st, d_st / 2,
+     h_st, w_st, d_st / 2,
+    -h_st, w_st, d_st / 2,
+    -h_st, w_st, d_st / 2,
+    -h_st, -w_st, d_st / 2,
+
   // Left face
-      -l, l, l,
-      -l, l, -l,
-      -l, l, -l,
-      -l, -l, -l,
-      -l, -l, -l,
-      -l, -l, l,
+    -h_st, w_st, d_st / 2,
+    -h_st, w_st, -d_st / 2,
+    -h_st, w_st, -d_st / 2,
+    -h_st, -w_st, -d_st / 2,
+    -h_st, -w_st, -d_st / 2,
+    -h_st, -w_st, d_st / 2,
+
   // Back face
-      -l, l, -l,
-      l, l, -l,
-      l, l, -l,
-      l, -l, -l,
-      l, -l, -l,
-      -l, -l, -l,
+     -h_st, w_st, -d_st / 2,
+      h_st, w_st, -d_st / 2,
+      h_st, w_st, -d_st / 2,
+      h_st, -w_st, -d_st / 2,
+      h_st, -w_st, -d_st / 2,
+    -h_st, -w_st, -d_st / 2,
+     
 
   // Right face
-      l, l, -l,
-      l, l, l,
-      l, -l, l,
-      l, -l, -l,
+      h_st, w_st, -d_st / 2,
+      h_st, w_st, d_st / 2,
+      h_st, -w_st, d_st / 2,
+      h_st, -w_st, -d_st / 2,
 ]);
 
-const wireframe_geometry = new THREE.BufferGeometry();
-wireframe_geometry.setAttribute( 'position', new THREE.BufferAttribute( wireframe_vertices, 3 ) );
+const st_wireframe_geometry = new THREE.BufferGeometry();
+st_wireframe_geometry.setAttribute( 'position', new THREE.BufferAttribute( st_wireframe_vertices, 3 ) );
 
-const cube_wirefreame_obj = new THREE.LineSegments( wireframe_geometry );
+const short_train_wireframe_obj = new THREE.LineSegments( st_wireframe_geometry );
 
 // helper functions for transformations
 function translationMatrix(tx, ty, tz) {
@@ -229,87 +242,63 @@ function scalingMatrix(sx, sy, sz) {
   );
 }
 
-// make cubes
-let cubes_mesh = [];
-let cubes_wireframe = [];
-for (let i = 0; i < 7; i++) {
-	let cube_m = cube_mesh_obj.clone();
-  let cube_wf = cube_wirefreame_obj.clone();
-
-	cube_m.matrixAutoUpdate = false;;
-  cube_wf.matrixAutoUpdate = false;;
-
-	cubes_mesh.push(cube_m);
-  cubes_wireframe.push(cube_wf);
-  cube_wf.visible = false;
-
-	scene.add(cube_m);
-  scene.add(cube_wf);
+let st_mesh = [], st_wireframe = [];
+for (let i = 0; i < 1; i++) {
+  let st_m = short_train_obj.clone();
+  let st_wf = short_train_wireframe_obj.clone();
+  st_m.matrixAutoUpdate = false;
+  st_wf.matrixAutoUpdate = false;
+  st_wf.visible = false;
+  st_mesh.push(st_m);
+  st_wireframe.push(st_wf);
+  scene.add(st_m);
+  scene.add(st_wf);
 }
 
-// animation
-let animation_time = 0;
-let delta_animation_time;
-let rotation_angle;
+// Animation Setup
+let animation_time = 0, delta_animation_time, speed = 0.5, positionZ = 0;
 const clock = new THREE.Clock();
-
-let MAX_ANGLE = Math.PI/18 // 10 degrees converted to radians
-let T = 2 // oscilation period in seconds
+let still = false;
 
 function animate() {
-	renderer.render( scene, camera );
+  renderer.render(scene, camera);
   controls.update();
-
-  delta_animation_time = clock.getDelta();
-  animation_time += delta_animation_time; 
-  
-  rotation_angle = MAX_ANGLE * 0.5 * (Math.sin(Math.PI * animation_time / T) + 1);
-
-  const t1 = translationMatrix(l, 1.5*l, 0); 
-  const t2 = translationMatrix(-l, 1.5*l, 0); 
-  const r = rotationMatrixZ(rotation_angle); 
-  const s = scalingMatrix(1, 1.5, 1); // Scale by 1.5 in y directions
-  let model_transformation = new THREE.Matrix4(); // model transformation matrix we will update
-  
-  // Apply transformations
-  for (let i = 0; i < cubes_mesh.length; i++) {
-    let temp_scale = new THREE.Matrix4(); // new temporary matrix for each cube
-    temp_scale.multiplyMatrices(s, temp_scale)
-    temp_scale.multiplyMatrices(model_transformation, temp_scale);
-
-    cubes_mesh[i].matrix.copy(temp_scale);
-    cubes_wireframe[i].matrix.copy(temp_scale);
-    
-    model_transformation.multiplyMatrices(t1, model_transformation);
-    model_transformation.multiplyMatrices(r, model_transformation);
-    model_transformation.multiplyMatrices(t2, model_transformation);
+  if (!still) {
+    delta_animation_time = clock.getDelta();
+    animation_time += delta_animation_time;
+    positionZ += speed * delta_animation_time;
+    if (positionZ < -10) positionZ = 0; // Reset position
+    st_mesh.forEach((m, i) => {
+      const transform = translationMatrix(0, 0, positionZ);
+      m.matrix.copy(transform);
+      st_wireframe[i].matrix.copy(transform);
+    });
   }
-    
 }
-renderer.setAnimationLoop( animate );
 
-// event listener
-let still = false;
-window.addEventListener('keydown', onKeyPress); // onKeyPress is called each time a key is pressed
-// Function to handle keypress
-function onKeyPress(event) {
-    switch (event.key) {
-        case 's': // Note we only do this if s is pressed.
-          still = !still;
-          if (still) {
-            clock.stop();
-          } else {
-             clock.start();
-          }
-          break;
-        case 'w': 
-          for (let i = 0; i < cubes_mesh.length; i++){
-            cubes_mesh[i].visible = !cubes_mesh[i].visible;
-            cubes_wireframe[i].visible = !cubes_wireframe[i].visible;
-          }
-          break;
-        
-        default:
-            console.log(`Key ${event.key} pressed`);
-    }
-}
+renderer.setAnimationLoop(animate);
+
+// Window Resize Handler
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Key Press Handler
+window.addEventListener('keydown', (event) => {
+  switch (event.key) {
+    case 's': // Toggle movement
+      still = !still;
+      still ? clock.stop() : clock.start();
+      break;
+    case 'w': // Toggle wireframe
+      st_mesh.forEach((m, i) => {
+        m.visible = !m.visible;
+        st_wireframe[i].visible = !st_wireframe[i].visible;
+      });
+      break;
+    default:
+      console.log(`Key ${event.key} pressed`);
+  }
+});
