@@ -12,6 +12,8 @@ import {
   ANIMATION_SETTINGS,
 } from './constants.js';
 
+//meow :)
+
 // 🌟 Initialize Scene, Camera, Renderer, Controls
 const { scene, camera, renderer, controls } = initializeScene();
 
