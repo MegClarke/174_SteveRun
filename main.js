@@ -67,22 +67,35 @@ const phongMaterial = new THREE.MeshPhongMaterial({
   shininess: MATERIAL_PROPERTIES.SHININESS,
 });
 
-// Create Train
 
-// Create Trains (Short and Tall)
+// Create Trains
 let trains = [];
 const trainTypes = [TRAIN_DIMENSIONS.SHORT, TRAIN_DIMENSIONS.TALL];
-trainTypes.forEach((type, index) => {
-  const { mesh, wireframe } = createTrain(type.w, type.h, type.d, phongMaterial);
+const depthOptions = [2, 2.5, 3, 3.5, 4];
+const spacingOptions = [0, 1, 3, 4.5];
+let currentZPosition = 0;
+
+for (let i = 0; i < 10; i++) {
+  const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];  // Randomly select short or tall type
+  const randomDepth = depthOptions[Math.floor(Math.random() * depthOptions.length)]; // Randomly select depth
+
+  const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
+
   mesh.matrixAutoUpdate = false;
   wireframe.matrixAutoUpdate = false;
   wireframe.visible = false;
-  mesh.position.z = index * -5; // Space trains along the Z-axis
+
+  const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
+  currentZPosition -= (randomDepth + randomSpacing);
+  mesh.position.z = currentZPosition;
+  wireframe.position.z = currentZPosition;
+
   scene.add(mesh);
   scene.add(wireframe);
-  trains.push({ mesh, wireframe, positionZ: mesh.position.z });
-});
 
+  // Push train details for animation
+  trains.push({ mesh, wireframe, positionZ: mesh.position.z });
+}
 
 
 function translationMatrix(tx, ty, tz) {

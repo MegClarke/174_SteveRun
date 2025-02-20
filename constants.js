@@ -1,10 +1,10 @@
 export const TRAIN_DIMENSIONS = {
-  SHORT: { w: 0.6, h: 0.8, d: 2 },
-  TALL: {  w: 0.6, h: 1.6, d: 2 },
+  SHORT: { w: 0.6, h: 0.8},
+  TALL: {  w: 0.6, h: 1.6},
 };
 
 export const PLAYER_DIMENSIONS = {
-  PLAYER: { w: 0.4, h: 1.2, d: 2 },
+  PLAYER: { w: 0.4, h: 1.2, d: 0.4},
 }
 
 export const TRACK_WIDTH = 0.6;
