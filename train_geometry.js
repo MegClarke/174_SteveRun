@@ -10,108 +10,110 @@ import * as THREE from 'three';
  */
 
 export function createTrain(w, h, d, material) {
-  const positions = new Float32Array([
-    // Front face
-    -w, -h,  d / 2, 
-     w, -h,  d / 2, 
-     w,  h,  d / 2, 
-    -w,  h,  d / 2,
+    w = w / 2;
+    d = d / 2;
+    const positions = new Float32Array([
+        // Front face
+        -w, 0,  d, 
+         w, 0,  d, 
+         w, h,  d, 
+        -w, h,  d,
 
-    // Left face
-    -w, -h, -d / 2,
-    -w, -h,  d / 2, 
-    -w,  h,  d / 2, 
-    -w,  h, -d / 2,
+        // Left face
+        -w, 0, -d,
+        -w, 0,  d, 
+        -w, h,  d, 
+        -w, h, -d,
 
-    // Top face
-    -w,  h,  d / 2, 
-     w,  h,  d / 2, 
-     w,  h, -d / 2,
-    -w,  h, -d / 2,
+        // Top face
+        -w, h,  d, 
+         w, h,  d, 
+         w, h, -d,
+        -w, h, -d,
 
-    // Bottom face
-    -w, -h,  d / 2, 
-    -w, -h, -d / 2, 
-     w, -h, -d / 2, 
-     w, -h,  d / 2,
+        // Bottom face
+        -w, 0,  d, 
+        -w, 0, -d, 
+         w, 0, -d, 
+         w, 0,  d,
 
-    // Right face
-     w, -h,  d / 2, 
-     w, -h, -d / 2, 
-     w,  h, -d / 2, 
-     w,  h,  d / 2,
+        // Right face
+         w, 0,  d, 
+         w, 0, -d, 
+         w, h, -d, 
+         w, h,  d,
 
-    // Back face
-     w, -h, -d / 2, 
-    -w, -h, -d / 2, 
-    -w,  h, -d / 2, 
-     w,  h, -d / 2,
-  ]);
+        // Back face
+         w, 0, -d, 
+        -w, 0, -d, 
+        -w, h, -d, 
+         w, h, -d,
+    ]);
 
-  const indices = [
-    0, 1, 2, 
-    0, 2, 3, 
-    
-    4, 5, 6, 
-    4, 6, 7,
+    const indices = [
+        0, 1, 2, 
+        0, 2, 3, 
+        
+        4, 5, 6, 
+        4, 6, 7,
 
-    8, 9, 10, 
-    8, 10, 11, 
-    
-    12, 13, 14, 
-    12, 14, 15,
+        8, 9, 10, 
+        8, 10, 11, 
+        
+        12, 13, 14, 
+        12, 14, 15,
 
-    16, 17, 18, 
-    16, 18, 19, 
-    
-    20, 21, 22, 
-    20, 22, 23,
-  ];
+        16, 17, 18, 
+        16, 18, 19, 
+        
+        20, 21, 22, 
+        20, 22, 23,
+    ];
 
-  const normals = new Float32Array([
-    0, 0, 1, 
-    0, 0, 1, 
-    0, 0, 1, 
-    0, 0, 1,
+    const normals = new Float32Array([
+        0, 0, 1, 
+        0, 0, 1, 
+        0, 0, 1, 
+        0, 0, 1,
 
-    -1, 0, 0, 
-    -1, 0, 0, 
-    -1, 0, 0, 
-    -1, 0, 0,
+        -1, 0, 0, 
+        -1, 0, 0, 
+        -1, 0, 0, 
+        -1, 0, 0,
 
-    0, 1, 0, 
-    0, 1, 0, 
-    0, 1, 0, 
-    0, 1, 0,
+        0, 1, 0, 
+        0, 1, 0, 
+        0, 1, 0, 
+        0, 1, 0,
 
-    0, -1, 0, 
-    0, -1, 0, 
-    0, -1, 0, 
-    0, -1, 0,
+        0, -1, 0, 
+        0, -1, 0, 
+        0, -1, 0, 
+        0, -1, 0,
 
-    1, 0, 0, 
-    1, 0, 0, 
-    1, 0, 0, 
-    1, 0, 0,
+        1, 0, 0, 
+        1, 0, 0, 
+        1, 0, 0, 
+        1, 0, 0,
 
-    0, 0, -1, 
-    0, 0, -1, 
-    0, 0, -1, 
-    0, 0, -1,
-  ]);
+        0, 0, -1, 
+        0, 0, -1, 
+        0, 0, -1, 
+        0, 0, -1,
+    ]);
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-  geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
 
-  const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, material);
 
-  const wireframeGeometry = new THREE.EdgesGeometry(geometry);
-  const wireframe = new THREE.LineSegments(
-    wireframeGeometry,
-    new THREE.LineBasicMaterial({ color: 0xffffff })
-  );
+    const wireframeGeometry = new THREE.EdgesGeometry(geometry);
+    const wireframe = new THREE.LineSegments(
+        wireframeGeometry,
+        new THREE.LineBasicMaterial({ color: 0xffffff })
+    );
 
-  return { mesh, wireframe };
+    return { mesh, wireframe };
 }
