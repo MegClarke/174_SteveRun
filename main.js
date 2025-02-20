@@ -72,7 +72,7 @@ const phongMaterial = new THREE.MeshPhongMaterial({
 let trains = [];
 const trainTypes = [TRAIN_DIMENSIONS.SHORT, TRAIN_DIMENSIONS.TALL];
 const depthOptions = [2, 2.5, 3, 3.5, 4];
-const spacingOptions = [0, 1, 3, 4.5];
+const spacingOptions = [0, 1, 3, 4.5, 8, 12];
 let currentZPosition = 0;
 
 for (let i = 0; i < 10; i++) {
@@ -137,7 +137,11 @@ function animate() {
     const delta = clock.getDelta();
     trains.forEach((train) => {
       train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
-      if (train.positionZ > 10) train.positionZ = -10;
+      if (trains.length > 0 && trains[0].positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
+        const removedTrain = trains.shift(); // Remove train that passed a certain point
+        scene.remove(removedTrain.mesh);
+        scene.remove(removedTrain.wireframe);
+      }
       const transform = translationMatrix(0, 0, train.positionZ);
       train.mesh.matrix.copy(transform);
       train.wireframe.matrix.copy(transform);
