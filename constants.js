@@ -7,7 +7,7 @@ export const PLAYER_DIMENSIONS = {
   PLAYER: { w: 0.4, h: 1.2, d: 0.4},
 }
 
-export const TRACK_WIDTH = 0.6;
+export const TRACK_WIDTH = 0.8;
 export const MAX_HEIGHT_JUMP = 1;
 
 export const MATERIAL_PROPERTIES = {
