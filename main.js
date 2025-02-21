@@ -53,6 +53,18 @@ trackPositions.forEach((xPos, trackIndex) => {
   }
 });
 
+// Create a Box Geometry
+const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // 1x1x1 box
+const boxMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
+const box = new THREE.Mesh(boxGeometry, boxMaterial);
+
+// Position the box at the origin (0, 0, 0)
+box.position.set(0, 0, 0);
+
+// Add the box to the scene
+scene.add(box);
+
+
 
 // Animation Variables
 let clock = new THREE.Clock();
@@ -91,6 +103,25 @@ window.addEventListener('resize', () => {
 // Key Press Handler
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
+    case 'a':
+      case 'A':
+        if (box.position.x > -0.75) { // Prevent moving left beyond -1
+          box.position.x -= 0.75; // Move left
+        }
+        break;
+      case 'd':
+      case 'D':
+        if (box.position.x < 0.75) { // Prevent moving right beyond 1
+          box.position.x += 0.75; // Move right
+        }
+        break;
+    case 'w':
+    case 'W':
+      box.position.y += 0.5; // Move up
+      break;
+    case 's':
+    case 'S':
+      box.position.y -= 0.5;
     case ' ':
       still = !still;
       still ? clock.stop() : clock.start();
