@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { initializeScene } from './scene_setup.js';
 import { createTrain } from './train_geometry.js';
 import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
+import './background.js'; 
 import {
   TRAIN_DIMENSIONS,
   PLAYER_DIMENSIONS,
@@ -12,7 +13,6 @@ import {
   ANIMATION_SETTINGS,
 } from './constants.js';
 
-// Initialize Scene, Camera, Renderer, Controls
 const { scene, camera, renderer, controls } = initializeScene();
 
 // Material
@@ -20,6 +20,8 @@ const phongMaterial = new THREE.MeshPhongMaterial({
   color: MATERIAL_PROPERTIES.COLOR,
   shininess: MATERIAL_PROPERTIES.SHININESS,
 });
+
+
 
 // Create Three Tracks of Trains (Left, Center, Right)
 let allTracks = [[], [], []]; // Left, Center, Right tracks
@@ -166,6 +168,7 @@ function animate() {
         train.wireframe.matrix.copy(transform);
       });
     });
+    renderer.render(scene, camera);
   }
 
   checkCollisions();

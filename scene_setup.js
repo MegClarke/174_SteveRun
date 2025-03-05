@@ -57,5 +57,16 @@ export function initializeScene() {
 
   scene.add(new THREE.AmbientLight(LIGHTING_SETTINGS.AMBIENT_LIGHT.color));
 
+  const loader = new THREE.TextureLoader();
+  loader.load(
+    './assets/clouds.jpg', // Make sure the image exists
+    (texture) => {
+        scene.background = texture;
+    },
+    undefined,
+    (error) => {
+        console.error('Error loading background texture:', error);
+    }
+);
   return { scene, camera, renderer, controls };
 }
