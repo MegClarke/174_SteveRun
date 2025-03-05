@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { initializeScene } from './scene_setup.js';
 import { createTrain } from './train_geometry.js';
 import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
-import './background.js'; 
+//import './background.js'; 
+import { createTrainTracks } from './train_tracks.js';
 import {
   TRAIN_DIMENSIONS,
   PLAYER_DIMENSIONS,
@@ -54,6 +55,11 @@ trackPositions.forEach((xPos, trackIndex) => {
     allTracks[trackIndex].push({ mesh, wireframe, positionZ: currentZPosition });
   }
 });
+
+// Load Train Tracks
+const textureLoader = new THREE.TextureLoader();
+const trainTracks = createTrainTracks(textureLoader, 5, 50); // Adjust width and length
+scene.add(trainTracks);
 
 
 // Animation Variables
