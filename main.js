@@ -12,9 +12,7 @@ import {
   ANIMATION_SETTINGS,
 } from './constants.js';
 
-//meow :)
-
-// 🌟 Initialize Scene, Camera, Renderer, Controls
+// Initialize Scene, Camera, Renderer, Controls
 const { scene, camera, renderer, controls } = initializeScene();
 
 // Material
@@ -53,28 +51,108 @@ trackPositions.forEach((xPos, trackIndex) => {
   }
 });
 
-// Create a Box Geometry
-const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // 1x1x1 box
-const boxMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
-const box = new THREE.Mesh(boxGeometry, boxMaterial);
+// Create Minecraft Steve using BoxGeometry with smaller proportions
+const steve = new THREE.Group();
+const boundingBoxSteve = new THREE.Box3();
 
-// Position the box at the origin (0, 0, 0)
-box.position.set(0, 0, 0);
+const headMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc99 }); // Light skin color
+const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x0066ff }); // Blue shirt
+const legMaterial = new THREE.MeshBasicMaterial({ color: 0x3333cc }); // Dark blue pants
+const armMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc99 }); // Same as head for arms
 
-// Add the box to the scene
-scene.add(box);
+// Head
+const head = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), headMaterial);
+head.position.set(0, 0.35, 0);
+steve.add(head);
 
+// Torso
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.225, 0.2, 0.075), bodyMaterial);
+torso.position.set(0, 0.175, 0);
+steve.add(torso);
 
+// Left Arm
+const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
+leftArm.position.set(-0.15, 0.20, 0);
+steve.add(leftArm);
+
+// Right Arm
+const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
+rightArm.position.set(0.15, 0.20, 0);
+steve.add(rightArm);
+
+// Left Leg
+const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
+leftLeg.position.set(-0.075, 0, 0);
+steve.add(leftLeg);
+
+// Right Leg
+const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
+rightLeg.position.set(0.075, 0, 0);
+steve.add(rightLeg);
+
+// Position Steve at the origin
+steve.position.set(0, 0, 0);
+scene.add(steve);
 
 // Animation Variables
 let clock = new THREE.Clock();
 let still = false;
+let runTime = 0; // Variable to track the time for leg and arm animation
+
+// Sprite Physics Variables
+let velocityY = 0;
+const gravity = -0.005;
+const jumpForce = 0.11;
+let isJumping = false;
+
+// Smooth movement variables
+let targetX = steve.position.x; // Target X position
+const moveSpeed = 0.1; // Controls how smooth the movement is
+
+function checkCollisions() {
+  boundingBoxSteve.setFromObject(steve);
+  for (const track of allTracks) {
+    for (const train of track) {
+      const boundingBoxTrain = new THREE.Box3().setFromObject(train.mesh);
+      if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
+        console.log("Collision detected!");
+        return;
+      }
+    }
+  }
+}
 
 function animate() {
   renderer.render(scene, camera);
   controls.update();
+
+  if (isJumping) {
+    steve.position.y += velocityY;
+    velocityY += gravity;
+    if (steve.position.y <= 0) {
+      steve.position.y = 0;
+      velocityY = 0;
+      isJumping = false;
+    }
+  }
+
   if (!still) {
     const delta = clock.getDelta();
+    runTime += delta;  // Increase runTime to simulate leg and arm movement
+
+    // Smoothly interpolate Steve's x position towards the target x position
+    steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
+
+    // Animate the legs to simulate running
+    const legRotation = Math.sin(runTime * 5) * 0.5; // Adjust speed and amplitude as needed
+    leftLeg.rotation.x = legRotation;
+    rightLeg.rotation.x = -legRotation;
+
+    // Animate the arms to simulate running
+    const armRotation = Math.sin(runTime * 5) * 0.5; // Adjust speed and amplitude as needed
+    leftArm.rotation.x = -armRotation;
+    rightArm.rotation.x = armRotation;
+
     allTracks.forEach((track) => {
       track.forEach((train) => {
         train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
@@ -89,6 +167,8 @@ function animate() {
       });
     });
   }
+
+  checkCollisions();
 }
 
 renderer.setAnimationLoop(animate);
@@ -100,39 +180,27 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Key Press Handler
+// Key Press Handler with smooth movement
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'a':
-      case 'A':
-        if (box.position.x > -0.75) { // Prevent moving left beyond -1
-          box.position.x -= 0.75; // Move left
-        }
-        break;
-      case 'd':
-      case 'D':
-        if (box.position.x < 0.75) { // Prevent moving right beyond 1
-          box.position.x += 0.75; // Move right
-        }
-        break;
+    case 'A':
+      targetX = Math.max(-0.8, steve.position.x - 0.8); // Limit movement to -0.8
+      break;
+    case 'd':
+    case 'D':
+      targetX = Math.min(0.8, steve.position.x + 0.8); // Limit movement to 0.8
+      break;
     case 'w':
     case 'W':
-      box.position.y += 0.5; // Move up
+      if (!isJumping) {
+        velocityY = jumpForce;
+        isJumping = true;
+      }
       break;
-    case 's':
-    case 'S':
-      box.position.y -= 0.5;
     case ' ':
       still = !still;
       still ? clock.stop() : clock.start();
-      break;
-    case '1':
-      allTracks.forEach((track) =>
-        track.forEach((train) => {
-          train.mesh.visible = !train.mesh.visible;
-          train.wireframe.visible = !train.wireframe.visible;
-        })
-      );
       break;
     default:
       console.log(`Key ${event.key} pressed`);
