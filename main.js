@@ -30,26 +30,26 @@ const depthOptions = [2, 2.5, 3, 3.5, 4];
 const spacingOptions = [0, 1, 3, 4.5, 8, 10, 20];
 const trackPositions = [-TRACK_WIDTH, 0, TRACK_WIDTH];
 
+let currentZPosition = [0, 0, 0];
 trackPositions.forEach((xPos, trackIndex) => {
-  let currentZPosition = 0;
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];
     const randomDepth = depthOptions[Math.floor(Math.random() * depthOptions.length)];
     const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
-    currentZPosition -= (randomDepth + randomSpacing);
+    currentZPosition[trackIndex] -= (randomDepth + randomSpacing);
 
     const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
     mesh.matrixAutoUpdate = false;
     wireframe.matrixAutoUpdate = false;
     wireframe.visible = false;
 
-    mesh.position.set(xPos, 0, currentZPosition);
-    wireframe.position.set(xPos, 0, currentZPosition);
+    mesh.position.set(xPos, 0, currentZPosition[trackIndex]);
+    wireframe.position.set(xPos, 0, currentZPosition[trackIndex]);
 
     scene.add(mesh);
     scene.add(wireframe);
 
-    allTracks[trackIndex].push({ mesh, wireframe, positionZ: currentZPosition });
+    allTracks[trackIndex].push({ mesh, wireframe, positionZ: currentZPosition[trackIndex]});
   }
 });
 
@@ -161,18 +161,55 @@ function animate() {
     leftArm.rotation.x = -armRotation;
     rightArm.rotation.x = armRotation;
 
-    allTracks.forEach((track) => {
-      track.forEach((train) => {
+    trackPositions.forEach((xPos, trackIndex) => {
+      let track = allTracks[trackIndex];
+    
+      for (let i = 0; i < track.length; i++) {
+        let train = track[i];
+    
+        // Move train forward
         train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
+        train.mesh.position.z = train.positionZ;
+        train.wireframe.position.z = train.positionZ;
+    
+        // Check if train should be removed
         if (train.positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
-          const removedTrain = track.shift(); 
-          scene.remove(removedTrain.mesh);
-          scene.remove(removedTrain.wireframe);
+          // Remove from scene
+          scene.remove(train.mesh);
+          scene.remove(train.wireframe);
+    
+          // Remove from array
+          track.shift(); // Remove the first train
+    
+          // Create new train
+          const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];
+          const randomDepth = depthOptions[Math.floor(Math.random() * depthOptions.length)];
+          const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
+    
+          // Ensure new train is placed far back
+          const lastTrainZ = track.length > 0 ? track[track.length - 1].positionZ : -10;
+          const newTrainZ = lastTrainZ - (randomDepth + randomSpacing);
+    
+          const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
+          mesh.matrixAutoUpdate = false;
+          wireframe.matrixAutoUpdate = false;
+          wireframe.visible = false;
+    
+          mesh.position.set(xPos, 0, newTrainZ);
+          wireframe.position.set(xPos, 0, newTrainZ);
+    
+          scene.add(mesh);
+          scene.add(wireframe);
+    
+          // Add new train to track
+          track.push({ mesh, wireframe, positionZ: newTrainZ });
         }
+    
+        // Apply transformation matrix
         const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
         train.mesh.matrix.copy(transform);
         train.wireframe.matrix.copy(transform);
-      });
+      }
     });
     renderer.render(scene, camera);
   }
