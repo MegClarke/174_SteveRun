@@ -5,6 +5,8 @@ import { initializeScene } from './scene_setup.js';
 import { createTrain } from './train_geometry.js';
 import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
 import { createTrainTracks } from './train_tracks.js';
+import { createFloor } from './floor.js'; // Import the floor function
+
 import {
   TRAIN_DIMENSIONS,
   PLAYER_DIMENSIONS,
@@ -22,7 +24,7 @@ const phongMaterial = new THREE.MeshPhongMaterial({
 });
 
 
-
+const textureLoader = new THREE.TextureLoader();
 // Create Three Tracks of Trains (Left, Center, Right)
 let allTracks = [[], [], []]; // Left, Center, Right tracks
 const trainTypes = [TRAIN_DIMENSIONS.SHORT, TRAIN_DIMENSIONS.TALL];
@@ -38,7 +40,7 @@ trackPositions.forEach((xPos, trackIndex) => {
     const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
     currentZPosition -= (randomDepth + randomSpacing);
 
-    const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
+    const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, textureLoader);
     mesh.matrixAutoUpdate = false;
     wireframe.matrixAutoUpdate = false;
     wireframe.visible = false;
@@ -54,9 +56,12 @@ trackPositions.forEach((xPos, trackIndex) => {
 });
 
 // Load Train Tracks
-const textureLoader = new THREE.TextureLoader();
-const trainTracks = createTrainTracks(textureLoader, .8, 50); // Adjust width and length
+const trainTracks = createTrainTracks(textureLoader, .8, 50, ); // Adjust width and length
 scene.add(trainTracks);
+
+// Create and add the floor
+const floor = createFloor(textureLoader);
+scene.add(floor);
 
 
 // Create Minecraft Steve using BoxGeometry with smaller proportions
@@ -134,6 +139,7 @@ function animate() {
   renderer.render(scene, camera);
   controls.update();
 
+
   if (isJumping) {
     steve.position.y += velocityY;
     velocityY += gravity;
@@ -175,6 +181,15 @@ function animate() {
       });
     });
     renderer.render(scene, camera);
+
+    // Move the train tracks and floor backward to simulate running
+    trainTracks.position.z += ANIMATION_SETTINGS.SPEED * delta/2;
+    floor.position.z += ANIMATION_SETTINGS.SPEED * delta/2;
+
+    // Reset position to prevent floating point issues (loop effect)
+    if (floor.position.z > 0) {
+        floor.position.z = -50; // Reset back to starting position
+    }
   }
 
   checkCollisions();
