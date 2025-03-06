@@ -55,13 +55,19 @@ trackPositions.forEach((xPos, trackIndex) => {
   }
 });
 
-// Load Train Tracks
-const trainTracks = createTrainTracks(textureLoader, .8, 50, ); // Adjust width and length
-scene.add(trainTracks);
+// Create two overlapping train tracks
+const trainTracks1 = createTrainTracks(textureLoader, 0.8, 50);
+const trainTracks2 = createTrainTracks(textureLoader, 0.8, 50);
+trainTracks1.position.z = 0;
+trainTracks2.position.z = -50;
+scene.add(trainTracks1, trainTracks2);
 
-// Create and add the floor
-const floor = createFloor(textureLoader);
-scene.add(floor);
+// Create two overlapping floors
+const floor1 = createFloor(textureLoader);
+const floor2 = createFloor(textureLoader);
+floor1.position.z = 0;
+floor2.position.z = -50;
+scene.add(floor1, floor2);
 
 
 // Create Minecraft Steve using BoxGeometry with smaller proportions
@@ -115,7 +121,7 @@ let runTime = 0; // Variable to track the time for leg and arm animation
 // Sprite Physics Variables
 let velocityY = 0;
 const gravity = -0.005;
-const jumpForce = 0.11;
+const jumpForce = 0.12;
 let isJumping = false;
 
 // Smooth movement variables
@@ -151,7 +157,7 @@ function animate() {
   }
 
   if (!still) {
-    const delta = clock.getDelta();
+    const delta = clock.getDelta(); //it was too slow
     runTime += delta;  // Increase runTime to simulate leg and arm movement
 
     // Smoothly interpolate Steve's x position towards the target x position
@@ -183,15 +189,28 @@ function animate() {
     renderer.render(scene, camera);
 
     // Move the train tracks and floor backward to simulate running
-    trainTracks.position.z += ANIMATION_SETTINGS.SPEED * delta/2;
-    floor.position.z += ANIMATION_SETTINGS.SPEED * delta/2;
+    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
 
-    // Reset position to prevent floating point issues (loop effect)
-    if (floor.position.z > 0) {
-        floor.position.z = -50; // Reset back to starting position
+    // Move both floors
+    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+
+    // ✅ Swap positions instead of resetting instantly
+    if (trainTracks1.position.z > 50) {
+        trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
+    }
+    if (trainTracks2.position.z > 50) {
+        trainTracks2.position.z = trainTracks1.position.z - 50;
+    }
+
+    if (floor1.position.z > 0) {
+        floor1.position.z = floor2.position.z - 50;
+    }
+    if (floor2.position.z > 0) {
+        floor2.position.z = floor1.position.z - 50;
     }
   }
-
   checkCollisions();
 }
 
