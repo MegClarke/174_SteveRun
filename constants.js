@@ -30,6 +30,8 @@ export const CAMERA_SETTINGS = {
 };
 
 export const ANIMATION_SETTINGS = {
+
   SPEED: 0.75,
   DISAPPEAR_POSITION: 10,
+
 };
