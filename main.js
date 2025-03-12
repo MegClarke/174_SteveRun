@@ -204,7 +204,6 @@ function animate() {
   renderer.render(scene, camera);
   controls.update();
 
-
   if (isJumping) {
     steve.position.y += velocityY;
     velocityY += gravity;
@@ -216,8 +215,8 @@ function animate() {
   }
 
   if (!still) {
-    const delta = clock.getDelta(); //it was too slow
-    runTime += delta;  // Increase runTime to simulate leg and arm movement
+    const delta = clock.getDelta(); // it was too slow
+    runTime += delta; // Increase runTime to simulate leg and arm movement
 
     // Smoothly interpolate Steve's x position towards the target x position
     steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
@@ -234,69 +233,59 @@ function animate() {
 
     trackPositions.forEach((xPos, trackIndex) => {
       let track = allTracks[trackIndex];
-    
+
       for (let i = 0; i < track.length; i++) {
         let train = track[i];
-    
+
         // Move train forward
         train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
         train.mesh.position.z = train.positionZ;
         train.wireframe.position.z = train.positionZ;
-    
+
         // Check if train should be removed
         if (train.positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
-
-          const removedTrain = track.shift(); 
+          const removedTrain = track.shift();
           scene.remove(removedTrain.mesh);
           scene.remove(removedTrain.wireframe);
-          if (removedTrain.coin) { // ✅ Check if coin exists before removing
+          if (removedTrain.coin) {
             scene.remove(removedTrain.coin);
           }
-          //idk theres a merge problem here idk what it is --sophie
 
-          // Remove from scene
-          scene.remove(train.mesh);
-          scene.remove(train.wireframe);
-    
-          // Remove from array
-          track.shift(); // Remove the first train
-    
           // Create new train
           const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];
           const randomDepth = depthOptions[Math.floor(Math.random() * depthOptions.length)];
           const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
-    
+
           // Ensure new train is placed far back
           const lastTrainZ = track.length > 0 ? track[track.length - 1].positionZ : -10;
           const newTrainZ = lastTrainZ - (randomDepth + randomSpacing);
-    
+
           const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
           mesh.matrixAutoUpdate = false;
           wireframe.matrixAutoUpdate = false;
           wireframe.visible = false;
-    
+
           mesh.position.set(xPos, 0, newTrainZ);
           wireframe.position.set(xPos, 0, newTrainZ);
-    
+
           scene.add(mesh);
           scene.add(wireframe);
-    
+
           // Add new train to track
           track.push({ mesh, wireframe, positionZ: newTrainZ });
-
         }
-    
+
         // Apply transformation matrix
         const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
         train.mesh.matrix.copy(transform);
         train.wireframe.matrix.copy(transform);
 
-        if (train.coin) { // ✅ Check if coin exists before moving it
+        if (train.coin) {
           train.coin.position.z = train.positionZ;
+        }
       }
     });
-      
-      //removed } cause merge problem maybe this is an issue --Sophie
+
     renderer.render(scene, camera);
 
     // Move the train tracks and floor backward to simulate running
@@ -309,21 +298,23 @@ function animate() {
 
     // ✅ Swap positions instead of resetting instantly
     if (trainTracks1.position.z > 50) {
-        trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
+      trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
     }
     if (trainTracks2.position.z > 50) {
-        trainTracks2.position.z = trainTracks1.position.z - 50;
+      trainTracks2.position.z = trainTracks1.position.z - 50;
     }
 
     if (floor1.position.z > 0) {
-        floor1.position.z = floor2.position.z - 50;
+      floor1.position.z = floor2.position.z - 50;
     }
     if (floor2.position.z > 0) {
-        floor2.position.z = floor1.position.z - 50;
+      floor2.position.z = floor1.position.z - 50;
     }
   }
+
   checkCollisions();
 }
+
 
 renderer.setAnimationLoop(animate);
 
