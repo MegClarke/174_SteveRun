@@ -119,33 +119,50 @@ let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
 let steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
 scene.add(steveBoxHelper);
 
-let boundingBoxTrain = [
+let allTrainBoundingBoxes = [
   [new THREE.Box3(), new THREE.Box3()],
   [new THREE.Box3(), new THREE.Box3()],
   [new THREE.Box3(), new THREE.Box3()]
 ];
 
-for (let i = 0; i < boundingBoxTrain.length; i++) {
-  for (let j = 0; j < boundingBoxTrain[i].length; j++) {
-    let trainBoxHelper = new THREE.Box3Helper(boundingBoxTrain[i][j], 0xff0000);
+for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
+  for (let j = 0; j < allTrainBoundingBoxes[i].length; j++) {
+    let trainBoxHelper = new THREE.Box3Helper(allTrainBoundingBoxes[i][j], 0xff0000);
     scene.add(trainBoxHelper);
   }
 }
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+  let standingOnTrain = false;
+  let trainTopY = 0;
   for (let i = 0; i < 3; i++) {
     const track = allTracks[i];
     for (let j = 0; j < 2; j++) {
       const train = track[j];
-      boundingBoxTrain[i][j].setFromObject(train.mesh);
+      const boundingBoxTrain = allTrainBoundingBoxes[i][j]
+      boundingBoxTrain.setFromObject(train.mesh);
       
-      if (boundingBoxSteve.intersectsBox(boundingBoxTrain[i][j])) {
+      if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
         console.log("Collision detected!");
-        return;
+        trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
+        const steveBottomY = steve.position.y; 
+
+        // Check if Steve is landing on top of the train
+        if (steveBottomY >= trainTopY - 0.02) {
+          console.log("On top!");
+          standingOnTrain = true;
+        }
       }
     }
   }
+  if (standingOnTrain) {
+    steve.position.y = trainTopY + 0.1; // Place Steve on top of the highest train he is colliding with
+    velocityY = 0;
+    isJumping = false;
+    console.log("Steve staying on top!");
+  }
+  //implement falling logic?
 }
 
 function animate() {
