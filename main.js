@@ -18,6 +18,8 @@ import {
 } from './constants.js';
 
 const { scene, camera, renderer, controls } = initializeScene();
+controls.enabled = false;
+
 
 // Material
 const phongMaterial = new THREE.MeshPhongMaterial({
@@ -54,17 +56,28 @@ trackPositions.forEach((xPos, trackIndex) => {
     scene.add(wireframe);
 
 
-    const hasCoin = Math.random() < 1;  
-
-    let coin = null; // ✅ Initialize coin variable
-    if (hasCoin) {
-      coin = createGoldCoin();
-      coin.position.set(xPos, randomType.h + 0.1, currentZPosition[trackIndex]);
-      scene.add(coin);
+    // Decide on a random number of coins (0 to 2 coins) to place on this train
+    const numCoins = Math.floor(Math.random() * 3); // 0, 1, or 2 coins
+    let coins = [];
+    if (numCoins > 0) {
+      // Calculate spacing along the train's top face (which goes from -d/2 to d/2)
+      const trainHalfDepth = randomDepth / 2;  // because createTrain halves d internally
+      const spacing = randomDepth / (numCoins + 1);
+      for (let j = 0; j < numCoins; j++) {
+        let coin = createGoldCoin();
+        // Compute offset along z so coins are spread out along the train's length
+        const offsetZ = -trainHalfDepth + spacing * (j + 1);
+        // Position coin relative to the train's current z position
+        coin.position.set(xPos, randomType.h + 0.1, currentZPosition[trackIndex] + offsetZ);
+        // Save the offset in coin.userData for later updates in animate()
+        coin.userData.offsetZ = offsetZ;
+        scene.add(coin);
+        coins.push(coin);
+      }
     }
-    
+
     //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
-    allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition[trackIndex]});
+    allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex]});
     //huh idk which one of these is right actually, added coin to the second one
 
   }
@@ -150,7 +163,11 @@ const jumpForce = 0.12;
 let isJumping = false;
 
 // Smooth movement variables
-let targetX = steve.position.x; // Target X position
+let currentColumn = 0;         // Start at center (0)
+const minColumn = -1;          // Leftmost column index
+const maxColumn = 1;           // Rightmost column index
+const columnSpacing = 0.8;     // Spacing multiplier for each column
+let targetX = currentColumn * columnSpacing; // Initial target x position
 const moveSpeed = 0.1; // Controls how smooth the movement is
 // Create a score counter
 let score = 0;
@@ -184,15 +201,17 @@ function checkCollisions() {
       }
 
       // Check if Steve collects a coin
-      if (train.coin) {
-        const boundingBoxCoin = new THREE.Box3().setFromObject(train.coin);
-        if (boundingBoxSteve.intersectsBox(boundingBoxCoin)) {
-          console.log("Coin collected!");
-          score += 1;  // Increase score
-          scoreDisplay.innerHTML = `Score: ${score}`; // Update the displayed score
-
-          scene.remove(train.coin); // Remove coin from the scene
-          train.coin = null;  // Prevent multiple collisions with the same coin
+      if (train.coins && train.coins.length > 0) {
+        for (let k = train.coins.length - 1; k >= 0; k--) {
+          let coin = train.coins[k];
+          const boundingBoxCoin = new THREE.Box3().setFromObject(coin);
+          if (boundingBoxSteve.intersectsBox(boundingBoxCoin)) {
+            console.log("Coin collected!");
+            score += 1;
+            scoreDisplay.innerHTML = `Score: ${score}`;
+            scene.remove(coin);
+            train.coins.splice(k, 1);
+          }
         }
       }
     }
@@ -221,6 +240,7 @@ function animate() {
     // Smoothly interpolate Steve's x position towards the target x position
     steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
 
+
     // Animate the legs to simulate running
     const legRotation = Math.sin(runTime * 5) * 0.5; // Adjust speed and amplitude as needed
     leftLeg.rotation.x = legRotation;
@@ -248,8 +268,8 @@ function animate() {
           // Remove the train from the scene
           scene.remove(train.mesh);
           scene.remove(train.wireframe);
-          if (train.coin) {
-            scene.remove(train.coin);
+          if (train.coins && train.coins.length > 0) {
+            train.coins.forEach(coin => scene.remove(coin));
           }
           // Remove the train from the array
           track.splice(i, 1); // CHANGED: Remove current train safely
@@ -288,12 +308,22 @@ function animate() {
           train.mesh.matrix.copy(transform);
           train.wireframe.matrix.copy(transform);
     
-          if (train.coin) {
-            train.coin.position.z = train.positionZ;
+          if (train.coins && train.coins.length > 0) {
+            train.coins.forEach(coin => {
+              coin.position.z = train.positionZ + coin.userData.offsetZ;
+            });
           }
         }
       }
     });
+
+    const cameraOffset = new THREE.Vector3(0, 3, 5);
+
+    // Inside your animate() function, after updating Steve's position:
+    const desiredCameraPos = steve.position.clone().add(cameraOffset);
+    // Smoothly interpolate using lerp; 0.1 is the interpolation factor (0 - no movement, 1 - instant movement)
+    camera.position.lerp(desiredCameraPos, 0.2);
+    camera.lookAt(steve.position);
 
     // Move the train tracks and floor backward to simulate running
     trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
@@ -337,11 +367,13 @@ window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'a':
     case 'A':
-      targetX = Math.max(-0.8, steve.position.x - 0.8); // Limit movement to -0.8
+      currentColumn = Math.max(minColumn, currentColumn - 1);
+      targetX = currentColumn * columnSpacing;
       break;
     case 'd':
     case 'D':
-      targetX = Math.min(0.8, steve.position.x + 0.8); // Limit movement to 0.8
+      currentColumn = Math.min(maxColumn, currentColumn + 1);
+      targetX = currentColumn * columnSpacing;
       break;
     case 'w':
     case 'W':
