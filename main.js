@@ -59,7 +59,7 @@ trackPositions.forEach((xPos, trackIndex) => {
     let coin = null; // ✅ Initialize coin variable
     if (hasCoin) {
       coin = createGoldCoin();
-      coin.position.set(xPos, randomType.h + 0.1, currentZPosition);
+      coin.position.set(xPos, randomType.h + 0.1, currentZPosition[trackIndex]);
       scene.add(coin);
     }
     
@@ -233,34 +233,37 @@ function animate() {
 
     trackPositions.forEach((xPos, trackIndex) => {
       let track = allTracks[trackIndex];
-
-      for (let i = 0; i < track.length; i++) {
+    
+      // Iterate backwards over the track array
+      for (let i = track.length - 1; i >= 0; i--) { // CHANGED: Use backwards loop
         let train = track[i];
-
+    
         // Move train forward
         train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
         train.mesh.position.z = train.positionZ;
         train.wireframe.position.z = train.positionZ;
-
+    
         // Check if train should be removed
         if (train.positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
-          const removedTrain = track.shift();
-          scene.remove(removedTrain.mesh);
-          scene.remove(removedTrain.wireframe);
-          if (removedTrain.coin) {
-            scene.remove(removedTrain.coin);
+          // Remove the train from the scene
+          scene.remove(train.mesh);
+          scene.remove(train.wireframe);
+          if (train.coin) {
+            scene.remove(train.coin);
           }
-
+          // Remove the train from the array
+          track.splice(i, 1); // CHANGED: Remove current train safely
+    
           // Create new train
           const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];
           const randomDepth = depthOptions[Math.floor(Math.random() * depthOptions.length)];
           const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
-
+    
           // Ensure new train is placed far back
           const lastTrainZ = track.length > 0 ? track[track.length - 1].positionZ : -10;
           const newTrainZ = lastTrainZ - (randomDepth + randomSpacing);
-
-          const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
+    
+          const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, textureLoader);
           mesh.matrixAutoUpdate = false;
           wireframe.matrixAutoUpdate = false;
           wireframe.visible = false;
@@ -268,25 +271,29 @@ function animate() {
           mesh.position.set(xPos, 0, newTrainZ);
           wireframe.position.set(xPos, 0, newTrainZ);
 
+          // ➡️ NEW: Immediately update the transformation matrix for the new train
+          const transform = translationMatrix(xPos, 0, newTrainZ);
+          mesh.matrix.copy(transform);
+          wireframe.matrix.copy(transform);
+
           scene.add(mesh);
           scene.add(wireframe);
 
           // Add new train to track
           track.push({ mesh, wireframe, positionZ: newTrainZ });
-        }
 
-        // Apply transformation matrix
-        const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
-        train.mesh.matrix.copy(transform);
-        train.wireframe.matrix.copy(transform);
-
-        if (train.coin) {
-          train.coin.position.z = train.positionZ;
+        } else {
+          // Apply transformation matrix only if the train was not removed
+          const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
+          train.mesh.matrix.copy(transform);
+          train.wireframe.matrix.copy(transform);
+    
+          if (train.coin) {
+            train.coin.position.z = train.positionZ;
+          }
         }
       }
     });
-
-    renderer.render(scene, camera);
 
     // Move the train tracks and floor backward to simulate running
     trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
