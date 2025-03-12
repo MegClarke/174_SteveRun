@@ -5,6 +5,10 @@ import { initializeScene } from './scene_setup.js';
 import { createTrain } from './train_geometry.js';
 import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
 import { createTrainTracks } from './train_tracks.js';
+import { createFloor } from './floor.js'; // Import the floor function
+import { createGoldCoin } from './coin.js';
+
+
 import {
   TRAIN_DIMENSIONS,
   PLAYER_DIMENSIONS,
@@ -22,7 +26,7 @@ const phongMaterial = new THREE.MeshPhongMaterial({
 });
 
 
-
+const textureLoader = new THREE.TextureLoader();
 // Create Three Tracks of Trains (Left, Center, Right)
 let allTracks = [[], [], []]; // Left, Center, Right tracks
 const trainTypes = [TRAIN_DIMENSIONS.SHORT, TRAIN_DIMENSIONS.TALL];
@@ -38,7 +42,7 @@ trackPositions.forEach((xPos, trackIndex) => {
     const randomSpacing = spacingOptions[Math.floor(Math.random() * spacingOptions.length)];
     currentZPosition[trackIndex] -= (randomDepth + randomSpacing);
 
-    const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, phongMaterial);
+    const { mesh, wireframe } = createTrain(randomType.w, randomType.h, randomDepth, textureLoader);
     mesh.matrixAutoUpdate = false;
     wireframe.matrixAutoUpdate = false;
     wireframe.visible = false;
@@ -49,14 +53,46 @@ trackPositions.forEach((xPos, trackIndex) => {
     scene.add(mesh);
     scene.add(wireframe);
 
-    allTracks[trackIndex].push({ mesh, wireframe, positionZ: currentZPosition[trackIndex]});
+
+    const hasCoin = Math.random() < 1;  
+
+    let coin = null; // ✅ Initialize coin variable
+    if (hasCoin) {
+      coin = createGoldCoin();
+      coin.position.set(xPos, randomType.h + 0.1, currentZPosition);
+      scene.add(coin);
+    }
+    
+    //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
+    allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition[trackIndex]});
+    //huh idk which one of these is right actually, added coin to the second one
+
   }
 });
 
-// Load Train Tracks
-const textureLoader = new THREE.TextureLoader();
-const trainTracks = createTrainTracks(textureLoader, .8, 50); // Adjust width and length
-scene.add(trainTracks);
+// Create two overlapping train tracks
+const trainTracks1 = createTrainTracks(textureLoader, 0.8, 50);
+const trainTracks2 = createTrainTracks(textureLoader, 0.8, 50);
+trainTracks1.position.z = 0;
+trainTracks2.position.z = -50;
+scene.add(trainTracks1, trainTracks2);
+
+// Create two overlapping floors
+const floor1 = createFloor(textureLoader);
+const floor2 = createFloor(textureLoader);
+floor1.position.z = 0;
+floor2.position.z = -50;
+scene.add(floor1, floor2);
+
+//Light!
+const topLight = new THREE.PointLight(0xffffff, 2, 100); // Color, Intensity, Distance
+topLight.position.set(0, 5, 0); // Place it above the scene
+topLight.castShadow = true; // Enable shadows for realism
+scene.add(topLight);
+
+// Optional: Add ambient light for overall brightness
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambientLight);
 
 
 // Create Minecraft Steve using BoxGeometry with smaller proportions
@@ -110,29 +146,64 @@ let runTime = 0; // Variable to track the time for leg and arm animation
 // Sprite Physics Variables
 let velocityY = 0;
 const gravity = -0.005;
-const jumpForce = 0.11;
+const jumpForce = 0.12;
 let isJumping = false;
 
 // Smooth movement variables
 let targetX = steve.position.x; // Target X position
 const moveSpeed = 0.1; // Controls how smooth the movement is
+// Create a score counter
+let score = 0;
+
+// Create an HTML element to display the score
+const scoreDisplay = document.createElement('div');
+scoreDisplay.style.position = 'absolute';
+scoreDisplay.style.top = '10px';
+scoreDisplay.style.right = '20px';
+scoreDisplay.style.color = 'white';
+scoreDisplay.style.fontSize = '24px';
+scoreDisplay.style.fontFamily = 'Arial, sans-serif';
+scoreDisplay.style.fontWeight = 'bold';
+scoreDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+scoreDisplay.style.padding = '10px 20px';
+scoreDisplay.style.borderRadius = '10px';
+scoreDisplay.innerHTML = `Score: ${score}`;
+document.body.appendChild(scoreDisplay);
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+
   for (const track of allTracks) {
-    for (const train of track) {
+    for (let i = track.length - 1; i >= 0; i--) {  // Loop backwards to remove items safely
+      const train = track[i];
       const boundingBoxTrain = new THREE.Box3().setFromObject(train.mesh);
+
       if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
-        console.log("Collision detected!");
+        console.log("Collision with train detected!");
         return;
+      }
+
+      // Check if Steve collects a coin
+      if (train.coin) {
+        const boundingBoxCoin = new THREE.Box3().setFromObject(train.coin);
+        if (boundingBoxSteve.intersectsBox(boundingBoxCoin)) {
+          console.log("Coin collected!");
+          score += 1;  // Increase score
+          scoreDisplay.innerHTML = `Score: ${score}`; // Update the displayed score
+
+          scene.remove(train.coin); // Remove coin from the scene
+          train.coin = null;  // Prevent multiple collisions with the same coin
+        }
       }
     }
   }
 }
 
+
 function animate() {
   renderer.render(scene, camera);
   controls.update();
+
 
   if (isJumping) {
     steve.position.y += velocityY;
@@ -145,7 +216,7 @@ function animate() {
   }
 
   if (!still) {
-    const delta = clock.getDelta();
+    const delta = clock.getDelta(); //it was too slow
     runTime += delta;  // Increase runTime to simulate leg and arm movement
 
     // Smoothly interpolate Steve's x position towards the target x position
@@ -174,6 +245,15 @@ function animate() {
     
         // Check if train should be removed
         if (train.positionZ > ANIMATION_SETTINGS.DISAPPEAR_POSITION) {
+
+          const removedTrain = track.shift(); 
+          scene.remove(removedTrain.mesh);
+          scene.remove(removedTrain.wireframe);
+          if (removedTrain.coin) { // ✅ Check if coin exists before removing
+            scene.remove(removedTrain.coin);
+          }
+          //idk theres a merge problem here idk what it is --sophie
+
           // Remove from scene
           scene.remove(train.mesh);
           scene.remove(train.wireframe);
@@ -203,17 +283,45 @@ function animate() {
     
           // Add new train to track
           track.push({ mesh, wireframe, positionZ: newTrainZ });
+
         }
     
         // Apply transformation matrix
         const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
         train.mesh.matrix.copy(transform);
         train.wireframe.matrix.copy(transform);
+
+        if (train.coin) { // ✅ Check if coin exists before moving it
+          train.coin.position.z = train.positionZ;
       }
     });
+      
+      //removed } cause merge problem maybe this is an issue --Sophie
     renderer.render(scene, camera);
-  }
 
+    // Move the train tracks and floor backward to simulate running
+    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+
+    // Move both floors
+    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+
+    // ✅ Swap positions instead of resetting instantly
+    if (trainTracks1.position.z > 50) {
+        trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
+    }
+    if (trainTracks2.position.z > 50) {
+        trainTracks2.position.z = trainTracks1.position.z - 50;
+    }
+
+    if (floor1.position.z > 0) {
+        floor1.position.z = floor2.position.z - 50;
+    }
+    if (floor2.position.z > 0) {
+        floor2.position.z = floor1.position.z - 50;
+    }
+  }
   checkCollisions();
 }
 
