@@ -108,43 +108,56 @@ let runTime = 0; // Variable to track the time for leg and arm animation
 // Sprite Physics Variables
 let velocityY = 0;
 const gravity = -0.005;
-const jumpForce = 0.11;
+const jumpForce = 0.12;
 let isJumping = false;
 
 // Smooth movement variables
 let targetX = steve.position.x; // Target X position
 const moveSpeed = 0.1; // Controls how smooth the movement is
 
-let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
-let steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
+const boundingBoxSteve = new THREE.Box3().setFromObject(steve);
+const steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
 scene.add(steveBoxHelper);
 
-let boundingBoxTrain = [
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()]
-];
-
-for (let i = 0; i < boundingBoxTrain.length; i++) {
-  for (let j = 0; j < boundingBoxTrain[i].length; j++) {
-    let trainBoxHelper = new THREE.Box3Helper(boundingBoxTrain[i][j], 0xff0000);
-    scene.add(trainBoxHelper);
-  }
-}
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
-  for (let i = 0; i < 3; i++) {
-    const track = allTracks[i];
-    for (let j = 0; j < 2; j++) {
-      const train = track[j];
-      boundingBoxTrain[i][j].setFromObject(train.mesh);
-      
-      if (boundingBoxSteve.intersectsBox(boundingBoxTrain[i][j])) {
-        console.log("Collision detected!");
-        return;
+  let standingOnTrain = false;
+  let maxTrainY = 0;
+
+  for (const track of allTracks) {
+    for (let i = 0; i < 2; i++) {
+      const train = track[i];
+      const boundingBoxTrain = new THREE.Box3().setFromObject(train.mesh);
+
+
+      if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
+        const trainTopY = train.mesh.geometry.parameters.height;
+        const steveBottomY = steve.position.y; 
+
+        // Check if Steve is landing on top of the train
+        if (steveBottomY >= trainTopY - 0.02) {
+          standingOnTrain = true;
+          maxTrainY = trainTopY;
+        } else {
+          // Instead of stopping the game, apply bounce back logic
+          console.log("Collision detected! Applying bounce back effect.");
+          // Example bounce: Reverse the vertical velocity and dampen it
+          velocityY = -Math.abs(velocityY) * 0.5;
+          // Optionally, you could also adjust Steve's horizontal position here if needed.
+        }
       }
     }
+  }
+
+  if (standingOnTrain) {
+    steve.position.y = maxTrainY; // Place Steve on top of the highest train he is colliding with
+    velocityY = 0;
+    isJumping = false;
+  } else if (steve.position.y > 0) {
+    // Apply gravity if Steve isn't on a train
+    velocityY += gravity;
+    steve.position.y += velocityY;
   }
 }
 
@@ -231,7 +244,11 @@ function animate() {
   }
 
   checkCollisions();
+  steveBoxHelper.update();
+
+  // Render the scene once per frame
   renderer.render(scene, camera);
+  
 }
 
 renderer.setAnimationLoop(animate);
@@ -248,11 +265,11 @@ window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'a':
     case 'A':
-      targetX = Math.max(-0.8, steve.position.x - 0.8); // Limit movement to -0.8
+      targetX = Math.max(-TRACK_WIDTH, steve.position.x - TRACK_WIDTH); // Limit movement to -0.8
       break;
     case 'd':
     case 'D':
-      targetX = Math.min(0.8, steve.position.x + 0.8); // Limit movement to 0.8
+      targetX = Math.min(TRACK_WIDTH, steve.position.x + TRACK_WIDTH); // Limit movement to 0.8
       break;
     case 'w':
     case 'W':
