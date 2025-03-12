@@ -157,7 +157,7 @@ function checkCollisions() {
     }
   }
   if (standingOnTrain) {
-    steve.position.y = trainTopY + 0.1; // Place Steve on top of the highest train he is colliding with
+    steve.position.y = trainTopY + 0.1; // place steve on top of train (+0.1 so his feet don't go under)
     velocityY = 0;
     isJumping = false;
     console.log("Steve staying on top!");
