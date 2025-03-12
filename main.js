@@ -6,6 +6,8 @@ import { createTrain } from './train_geometry.js';
 import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
 import { createTrainTracks } from './train_tracks.js';
 import { createFloor } from './floor.js'; // Import the floor function
+import { createGoldCoin } from './coin.js';
+
 
 import {
   TRAIN_DIMENSIONS,
@@ -51,6 +53,17 @@ trackPositions.forEach((xPos, trackIndex) => {
     scene.add(mesh);
     scene.add(wireframe);
 
+    const hasCoin = Math.random() < 1;  
+
+    let coin = null; // ✅ Initialize coin variable
+    if (hasCoin) {
+      coin = createGoldCoin();
+      coin.position.set(xPos, randomType.h + 0.1, currentZPosition);
+      scene.add(coin);
+    }
+    
+    allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
+
     allTracks[trackIndex].push({ mesh, wireframe, positionZ: currentZPosition });
   }
 });
@@ -68,6 +81,16 @@ const floor2 = createFloor(textureLoader);
 floor1.position.z = 0;
 floor2.position.z = -50;
 scene.add(floor1, floor2);
+
+//Light!
+const topLight = new THREE.PointLight(0xffffff, 2, 100); // Color, Intensity, Distance
+topLight.position.set(0, 5, 0); // Place it above the scene
+topLight.castShadow = true; // Enable shadows for realism
+scene.add(topLight);
+
+// Optional: Add ambient light for overall brightness
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambientLight);
 
 
 // Create Minecraft Steve using BoxGeometry with smaller proportions
@@ -127,19 +150,53 @@ let isJumping = false;
 // Smooth movement variables
 let targetX = steve.position.x; // Target X position
 const moveSpeed = 0.1; // Controls how smooth the movement is
+// Create a score counter
+let score = 0;
+
+// Create an HTML element to display the score
+const scoreDisplay = document.createElement('div');
+scoreDisplay.style.position = 'absolute';
+scoreDisplay.style.top = '10px';
+scoreDisplay.style.right = '20px';
+scoreDisplay.style.color = 'white';
+scoreDisplay.style.fontSize = '24px';
+scoreDisplay.style.fontFamily = 'Arial, sans-serif';
+scoreDisplay.style.fontWeight = 'bold';
+scoreDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+scoreDisplay.style.padding = '10px 20px';
+scoreDisplay.style.borderRadius = '10px';
+scoreDisplay.innerHTML = `Score: ${score}`;
+document.body.appendChild(scoreDisplay);
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+
   for (const track of allTracks) {
-    for (const train of track) {
+    for (let i = track.length - 1; i >= 0; i--) {  // Loop backwards to remove items safely
+      const train = track[i];
       const boundingBoxTrain = new THREE.Box3().setFromObject(train.mesh);
+
       if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
-        console.log("Collision detected!");
+        console.log("Collision with train detected!");
         return;
+      }
+
+      // Check if Steve collects a coin
+      if (train.coin) {
+        const boundingBoxCoin = new THREE.Box3().setFromObject(train.coin);
+        if (boundingBoxSteve.intersectsBox(boundingBoxCoin)) {
+          console.log("Coin collected!");
+          score += 1;  // Increase score
+          scoreDisplay.innerHTML = `Score: ${score}`; // Update the displayed score
+
+          scene.remove(train.coin); // Remove coin from the scene
+          train.coin = null;  // Prevent multiple collisions with the same coin
+        }
       }
     }
   }
 }
+
 
 function animate() {
   renderer.render(scene, camera);
@@ -180,10 +237,17 @@ function animate() {
           const removedTrain = track.shift(); 
           scene.remove(removedTrain.mesh);
           scene.remove(removedTrain.wireframe);
+          if (removedTrain.coin) { // ✅ Check if coin exists before removing
+            scene.remove(removedTrain.coin);
+          }
         }
         const transform = translationMatrix(train.mesh.position.x, 0, train.positionZ);
         train.mesh.matrix.copy(transform);
         train.wireframe.matrix.copy(transform);
+        if (train.coin) { // ✅ Check if coin exists before moving it
+          train.coin.position.z = train.positionZ;
+        }
+
       });
     });
     renderer.render(scene, camera);
