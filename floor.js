@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function createFloor(textureLoader) {
     // Load texture
-    const texture = textureLoader.load('./assets/grass.jpg');
+    const texture = textureLoader.load('./assets/dirt.jpg');
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
 
