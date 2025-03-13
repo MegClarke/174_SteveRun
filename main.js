@@ -134,8 +134,12 @@ for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+  const steveRightX = steve.position.x + 0.375;
+  const steveLeftX = steve.position.x;
 
   let standingOnTrain = false;
+  let crashRight = false;
+  let crashLeft = false;
   let trainTopY = 0;
   for (let i = 0; i < 3; i++) {
     const track = allTracks[i];
@@ -148,12 +152,7 @@ function checkCollisions() {
         console.log("Collision detected!");
         trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
         const steveBottomY = steve.position.y; 
-        const steveRightX = steve.position.x + 0.375;
-        const steveLeftX = steve.position.x;
         const steveFrontZ = boundingBoxSteve.min.z;
-
-        const trainRightX = train.mesh.position.x + 0.6;
-        const trainLeftX = train.mesh.position.x;
 
         // Check if Steve is landing on top of the train
         if (steveBottomY >= trainTopY - 0.1) {
@@ -164,25 +163,13 @@ function checkCollisions() {
         //   console.log("Crash Front!");
         //   still = !still; //stop game for now
         // }
-        if (steveRightX  >= trainLeftX) {
+        if (targetX  >= steve.position.x) {
           console.log("Crash Right!");
-          if (steveRightX >= 0) {
-            targetX = 0;
-          }
-          else if (steveRightX <= 0) {
-            targetX = -TRACK_WIDTH;
-          }
-          steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
+          crashRight = true;
         }
-        if (steveLeftX <= trainRightX) {
+        if (targetX <= steve.position.x) {
           console.log("Crash Left!");
-          if (steveLeftX >= 0) {
-            targetX = TRACK_WIDTH;
-          }
-          else if (steveLeftX <= 0) {
-            targetX = 0;
-          }
-          steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
+          crashLeft = true;
         }
       }
     }
@@ -194,6 +181,22 @@ function checkCollisions() {
     console.log("Steve staying on top!");
   }
   //implement falling logic?
+  if(crashRight){
+    if (steveRightX >= 0) {
+      targetX = 0;
+    }
+    else if (steveRightX <= 0) {
+      targetX = -TRACK_WIDTH;
+    }
+  }
+  if(crashLeft){
+    if (steveLeftX >= 0) {
+      targetX = TRACK_WIDTH;
+    }
+    else if (steveLeftX <= 0) {
+      targetX = 0;
+    }
+  }
 }
 
 
