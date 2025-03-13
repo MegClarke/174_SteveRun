@@ -4,7 +4,7 @@ export const TRAIN_DIMENSIONS = {
 };
 
 export const PLAYER_DIMENSIONS = {
-  PLAYER: { w: 0.4, h: 1.2, d: 0.4},
+  PLAYER: { w: 0.375, h: 1.2, d: 0.4},
 }
 
 export const TRACK_WIDTH = 0.8;
@@ -30,8 +30,6 @@ export const CAMERA_SETTINGS = {
 };
 
 export const ANIMATION_SETTINGS = {
-
-  SPEED: 0.75,
-  DISAPPEAR_POSITION: 10,
-
+  SPEED: 0.8,
+  DISAPPEAR_POSITION: 3,
 };
