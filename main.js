@@ -31,8 +31,8 @@ const phongMaterial = new THREE.MeshPhongMaterial({
 });
 
 const startZ = 5;
-
 const textureLoader = new THREE.TextureLoader();
+
 // Create Three Tracks of Trains (Left, Center, Right)
 let allTracks = [[], [], []]; // Left, Center, Right tracks
 const trainTypes = [TRAIN_DIMENSIONS.SHORT, TRAIN_DIMENSIONS.TALL];
@@ -133,7 +133,6 @@ scene.add(ambientLight);
 
 // Create Minecraft Steve using BoxGeometry with smaller proportions
 const steve = new THREE.Group();
-const boundingBoxSteve = new THREE.Box3();
 
 const headMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc99 }); // Light skin color
 const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x0066ff }); // Blue shirt
@@ -210,19 +209,95 @@ scoreDisplay.style.borderRadius = '10px';
 scoreDisplay.innerHTML = `Score: ${score}`;
 document.body.appendChild(scoreDisplay);
 
+let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
+let steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
+scene.add(steveBoxHelper);
+
+let allTrainBoundingBoxes = [
+  [new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3()]
+];
+
+for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
+  for (let j = 0; j < allTrainBoundingBoxes[i].length; j++) {
+    let trainBoxHelper = new THREE.Box3Helper(allTrainBoundingBoxes[i][j], 0xff0000);
+    scene.add(trainBoxHelper);
+  }
+}
+
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+  
+  const steveRightX = steve.position.x + 0.375;
+  const steveLeftX = steve.position.x;
 
-  for (const track of allTracks) {
-    for (let i = track.length - 1; i >= 0; i--) {  // Loop backwards to remove items safely
-      const train = track[i];
-      const boundingBoxTrain = new THREE.Box3().setFromObject(train.mesh);
-
+  let standingOnTrain = false;
+  let crashRight = false;
+  let crashLeft = false;
+  let trainTopY = 0;
+  for (let i = 0; i < 3; i++) {
+    const track = allTracks[i];
+    for (let j = 0; j < 2; j++) {
+      const train = track[j];
+      const boundingBoxTrain = allTrainBoundingBoxes[i][j]
+      boundingBoxTrain.setFromObject(train.mesh);
+      
       if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
-        console.log("Collision with train detected!");
-        return;
-      }
+        console.log("Collision detected!");
+        trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
+        const steveBottomY = steve.position.y; 
+        const steveFrontZ = boundingBoxSteve.min.z;
 
+        // Check if Steve is landing on top of the train
+        if (steveBottomY >= trainTopY - 0.1) {
+          console.log("On top!");
+          standingOnTrain = true;
+        }
+        // else if (steveFrontZ <= boundingBoxTrain.max.z) {
+        //   console.log("Crash Front!");
+        //   still = !still; //stop game for now
+        // }
+        if (targetX  >= steve.position.x) {
+          console.log("Crash Right!");
+          crashRight = true;
+        }
+        if (targetX <= steve.position.x) {
+          console.log("Crash Left!");
+          crashLeft = true;
+        }
+      }
+    }
+  }
+  
+  if (standingOnTrain) {
+    steve.position.y = trainTopY + 0.1; // place steve on top of train (+0.1 so his feet don't go under)
+    velocityY = 0;
+    isJumping = false;
+    console.log("Steve staying on top!");
+  }
+  //implement falling logic?
+  if(crashRight){
+    if (steveRightX >= 0) {
+      targetX = 0;
+    }
+    else if (steveRightX <= 0) {
+      targetX = -TRACK_WIDTH;
+    }
+  }
+  if(crashLeft){
+    if (steveLeftX >= 0) {
+      targetX = TRACK_WIDTH;
+    }
+    else if (steveLeftX <= 0) {
+      targetX = 0;
+    }
+  }
+  
+  
+  for (const track of allTracks) {
+    for (let i = track.length - 1; i >= 0; i--) {
+      let train = track[i];
       // Check if Steve collects a coin
       if (train.coins && train.coins.length > 0) {
         for (let k = train.coins.length - 1; k >= 0; k--) {
@@ -239,11 +314,11 @@ function checkCollisions() {
       }
     }
   }
+ 
 }
 
 
 function animate() {
-  renderer.render(scene, camera);
   controls.update();
 
   if (isJumping) {
@@ -359,7 +434,7 @@ function animate() {
     walls1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
     walls2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
 
-    // ✅ Swap positions instead of resetting instantly
+    // Swap positions instead of resetting instantly
     if (trainTracks1.position.z > startZ + 50) {
       trainTracks1.position.z = trainTracks2.position.z - 50;
     }
@@ -386,6 +461,7 @@ function animate() {
 
 
   checkCollisions();
+  renderer.render(scene, camera);
 }
 
 
@@ -421,7 +497,7 @@ window.addEventListener('keydown', (event) => {
     case ' ':
       still = !still;
       still ? clock.stop() : clock.start();
-      break;
+      break; 
     default:
       console.log(`Key ${event.key} pressed`);
   }
