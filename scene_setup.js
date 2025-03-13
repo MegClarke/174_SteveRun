@@ -29,16 +29,6 @@ export function initializeScene() {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 5, 0);
 
-  // 3D Axis Helper
-  const createAxisLine = (color, start, end) => {
-    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-    const material = new THREE.LineBasicMaterial({ color: color });
-    return new THREE.Line(geometry, material);
-  };
-  scene.add(createAxisLine(0xff0000, new THREE.Vector3(0, 0, 0), new THREE.Vector3(3, 0, 0))); // Red (X)
-  scene.add(createAxisLine(0x00ff00, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 3, 0))); // Green (Y)
-  scene.add(createAxisLine(0x0000ff, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 3))); // Blue (Z)
-
   // Lighting
   const pointLight = new THREE.PointLight(
     LIGHTING_SETTINGS.POINT_LIGHT.color,

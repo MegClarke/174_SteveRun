@@ -23,13 +23,6 @@ const { scene, camera, renderer, controls } = initializeScene();
 //THIS SHOULD BE ON AFTER EVERyTHING IS FIXED
 
 
-
-// Material
-const phongMaterial = new THREE.MeshPhongMaterial({
-  color: MATERIAL_PROPERTIES.COLOR,
-  shininess: MATERIAL_PROPERTIES.SHININESS,
-});
-
 const startZ = 5;
 const textureLoader = new THREE.TextureLoader();
 
@@ -210,21 +203,12 @@ scoreDisplay.innerHTML = `Score: ${score}`;
 document.body.appendChild(scoreDisplay);
 
 let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
-let steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
-scene.add(steveBoxHelper);
 
 let allTrainBoundingBoxes = [
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()]
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()]
 ];
-
-for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
-  for (let j = 0; j < allTrainBoundingBoxes[i].length; j++) {
-    let trainBoxHelper = new THREE.Box3Helper(allTrainBoundingBoxes[i][j], 0xff0000);
-    scene.add(trainBoxHelper);
-  }
-}
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
@@ -238,7 +222,7 @@ function checkCollisions() {
   let trainTopY = 0;
   for (let i = 0; i < 3; i++) {
     const track = allTracks[i];
-    for (let j = 0; j < 2; j++) {
+    for (let j = 0; j < 3; j++) {
       const train = track[j];
       const boundingBoxTrain = allTrainBoundingBoxes[i][j]
       boundingBoxTrain.setFromObject(train.mesh);
@@ -258,11 +242,14 @@ function checkCollisions() {
         //   console.log("Crash Front!");
         //   still = !still; //stop game for now
         // }
-        if (targetX  >= steve.position.x) {
+        if (targetX  >= steve.position.x + 0.3) { //account for unfinished lerp
+          console.log("Target Position: ", targetX);
           console.log("Crash Right!");
           crashRight = true;
         }
-        if (targetX <= steve.position.x) {
+        if (targetX <= steve.position.x - 0.3) { //account for unfinished lerp
+          console.log("Steve Position: ", steve.position.x);
+          console.log("Target Position: ", targetX);
           console.log("Crash Left!");
           crashLeft = true;
         }
@@ -481,11 +468,15 @@ window.addEventListener('keydown', (event) => {
     case 'A':
       currentColumn = Math.max(minColumn, currentColumn - 1);
       targetX = currentColumn * columnSpacing;
+      console.log("Current Column: ", currentColumn);
+      console.log("Target X: ", targetX);
       break;
     case 'd':
     case 'D':
       currentColumn = Math.min(maxColumn, currentColumn + 1);
       targetX = currentColumn * columnSpacing;
+      console.log("Current Column: ", currentColumn);
+      console.log("Target X: ", targetX);
       break;
     case 'w':
     case 'W':
