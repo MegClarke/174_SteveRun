@@ -2,14 +2,14 @@
 
 import * as THREE from 'three';
 import { initializeScene } from './scene_setup.js';
-import { createTrain } from './train_geometry.js';
-import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformations.js';
-import { createTrainTracks } from './train_tracks.js';
-import { createFloor } from './floor.js'; // Import the floor function
-import { createGoldCoin } from './coin.js';
-import { createWalls } from './walls.js';
-import { createScoreDisplay, updateScoreDisplay } from './score_display.js';
-import { Steve } from './steve.js';
+import { translationMatrix } from './transformations.js';
+import { createTrain } from './create_files/train.js';
+import { createTrainTracks } from './create_files/train_tracks.js';
+import { createFloor } from './create_files/floor.js'; // Import the floor function
+import { createGoldCoin } from './create_files/coin.js';
+import { createWalls } from './create_files/walls.js';
+import { createScoreDisplay, updateScoreDisplay } from './create_files/score_display.js';
+import { Steve } from './create_files/steve.js';
 
 
 import {
