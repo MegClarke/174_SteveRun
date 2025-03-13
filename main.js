@@ -10,6 +10,7 @@ import { createGoldCoin } from './create_files/coin.js';
 import { createWalls } from './create_files/walls.js';
 import { createScoreDisplay, updateScoreDisplay } from './create_files/score_display.js';
 import { Steve } from './create_files/steve.js';
+import { showGameOver } from './game_over.js';
 
 
 import {
@@ -33,7 +34,7 @@ const depthOptions = [2, 2.5, 3, 3.5, 4];
 const spacingOptions = [0, 1, 3, 4.5, 8, 10, 20];
 const trackPositions = [-TRACK_WIDTH, 0, TRACK_WIDTH];
 
-let currentZPosition = [0, 0, 0];
+let currentZPosition = [-3, -3, -3];
 function generateCoinsForTrain(xPos, randomType, randomDepth, baseZ) {
   const numCoins = Math.floor(Math.random() * 3); // 0, 1, or 2 coins
   let coins = [];
@@ -141,7 +142,7 @@ const minColumn = -1;          // Leftmost column index
 const maxColumn = 1;           // Rightmost column index
 const columnSpacing = 0.8;     // Spacing multiplier for each column
 let targetX = currentColumn * columnSpacing; // Initial target x position
-const moveSpeed = 0.1; // Controls how smooth the movement is
+let moveSpeed = 0.1; // Controls how smooth the movement is
 // Create a score counter
 let score = 0;
 
@@ -185,20 +186,22 @@ function checkCollisions() {
           console.log("On top!");
           standingOnTrain = true;
         }
-        // else if (steveFrontZ <= boundingBoxTrain.max.z) {
-        //   console.log("Crash Front!");
-        //   still = !still; //stop game for now
-        // }
-        if (targetX  >= steve.position.x + 0.2) { //account for unfinished lerp
+        if (targetX  >= steve.position.x + 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
           console.log("Target Position: ", targetX);
           console.log("Crash Right!");
           crashRight = true;
         }
-        if (targetX <= steve.position.x - 0.2) { //account for unfinished lerp
+        if (targetX <= steve.position.x - 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
           console.log("Crash Left!");
           crashLeft = true;
+        }
+        if (!standingOnTrain && !crashRight && !crashLeft && (steveFrontZ <= boundingBoxTrain.max.z)) {
+          console.log("Crash Front!");
+          gameOver = true;
+          renderer.setAnimationLoop(null);
+          showGameOver(score);
         }
       }
     }
@@ -250,8 +253,9 @@ function checkCollisions() {
   }
 }
 
-
+let gameOver = false;
 function animate() {
+  if (gameOver) return;
   controls.update();
 
   if (isJumping) {
@@ -268,6 +272,9 @@ function animate() {
     const delta = clock.getDelta(); // it was too slow
     runTime += delta; // Increase runTime to simulate leg and arm movement
 
+    const currentSpeed = Math.min(ANIMATION_SETTINGS.BASE_SPEED + ANIMATION_SETTINGS.SPEED_INC * delta, ANIMATION_SETTINGS.MAX_SPEED);
+    moveSpeed = Math.min(moveSpeed + (ANIMATION_SETTINGS.SPEED_INC * delta) / 20, 0.25);
+
     // Smoothly interpolate Steve's x position towards the target x position
     steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
     steve.animateLimbs(runTime);
@@ -280,7 +287,7 @@ function animate() {
         let train = track[i];
     
         // Move train forward
-        train.positionZ += ANIMATION_SETTINGS.SPEED * delta;
+        train.positionZ += currentSpeed * delta;
         train.mesh.position.z = train.positionZ;
         train.wireframe.position.z = train.positionZ;
     
@@ -348,14 +355,14 @@ function animate() {
     camera.position.lerp(desiredCameraPos, 0.2);
     camera.lookAt(steve.position);
 
-    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
-    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    trainTracks1.position.z += currentSpeed * delta / 2 ;
+    trainTracks2.position.z += currentSpeed * delta / 2 ;
 
-    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
-    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    floor1.position.z += currentSpeed * delta / 2 ;
+    floor2.position.z += currentSpeed * delta / 2 ;
 
-    walls1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
-    walls2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    walls1.position.z += currentSpeed * delta / 2;
+    walls2.position.z += currentSpeed * delta / 2;
 
     // Swap positions instead of resetting instantly
     if (trainTracks1.position.z > startZ + 50) {
@@ -418,10 +425,6 @@ window.addEventListener('keydown', (event) => {
         isJumping = true;
       }
       break;
-    case ' ':
-      still = !still;
-      still ? clock.stop() : clock.start();
-      break; 
     default:
       console.log(`Key ${event.key} pressed`);
   }
