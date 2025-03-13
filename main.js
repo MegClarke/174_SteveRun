@@ -8,13 +8,13 @@ import { createTrainTracks } from './train_tracks.js';
 import { createFloor } from './floor.js'; // Import the floor function
 import { createGoldCoin } from './coin.js';
 import { createWalls } from './walls.js';
+import { createScoreDisplay, updateScoreDisplay } from './score_display.js';
 
 
 import {
   TRAIN_DIMENSIONS,
   PLAYER_DIMENSIONS,
   TRACK_WIDTH,
-  MATERIAL_PROPERTIES,
   ANIMATION_SETTINGS,
 } from './constants.js';
 
@@ -188,18 +188,7 @@ const moveSpeed = 0.1; // Controls how smooth the movement is
 let score = 0;
 
 // Create an HTML element to display the score
-const scoreDisplay = document.createElement('div');
-scoreDisplay.style.position = 'absolute';
-scoreDisplay.style.top = '10px';
-scoreDisplay.style.right = '20px';
-scoreDisplay.style.color = 'white';
-scoreDisplay.style.fontSize = '24px';
-scoreDisplay.style.fontFamily = 'Arial, sans-serif';
-scoreDisplay.style.fontWeight = 'bold';
-scoreDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-scoreDisplay.style.padding = '10px 20px';
-scoreDisplay.style.borderRadius = '10px';
-scoreDisplay.innerHTML = `Score: ${score}`;
+const scoreDisplay = createScoreDisplay(score);
 document.body.appendChild(scoreDisplay);
 
 let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
@@ -293,7 +282,7 @@ function checkCollisions() {
           if (boundingBoxSteve.intersectsBox(boundingBoxCoin)) {
             console.log("Coin collected!");
             score += 1;
-            scoreDisplay.innerHTML = `Score: ${score}`;
+            updateScoreDisplay(scoreDisplay, score);
             scene.remove(coin);
             train.coins.splice(k, 1);
           }
@@ -301,7 +290,6 @@ function checkCollisions() {
       }
     }
   }
- 
 }
 
 
@@ -443,9 +431,6 @@ function animate() {
       walls2.position.z = walls1.position.z - 50;
     }
   }
-
-
-
 
   checkCollisions();
   renderer.render(scene, camera);

@@ -10,11 +10,6 @@ export const PLAYER_DIMENSIONS = {
 export const TRACK_WIDTH = 0.8;
 export const MAX_HEIGHT_JUMP = 1;
 
-export const MATERIAL_PROPERTIES = {
-  COLOR: 0x00ff00, // Green
-  SHININESS: 100,
-};
-
 export const LIGHTING_SETTINGS = {
   POINT_LIGHT: { color: 0xffffff, intensity: 100, distance: 100, position: [5, 5, 5] },
   DIRECTIONAL_LIGHT: { color: 0xffffff, intensity: 1, position: [0.5, 0, 1.0] },
