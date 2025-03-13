@@ -21,6 +21,8 @@ export const CAMERA_SETTINGS = {
 };
 
 export const ANIMATION_SETTINGS = {
-  SPEED: 2,
+  BASE_SPEED: 2,
+  SPEED_INC: 0.02,
+  MAX_SPEED: 5,
   DISAPPEAR_POSITION: 5,
 };
