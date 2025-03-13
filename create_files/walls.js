@@ -1,6 +1,6 @@
 // walls.js (or add to main.js above animate function)
 import * as THREE from 'three';
-import { TRACK_WIDTH } from './constants.js'; // if TRACK_WIDTH is exported
+import { TRACK_WIDTH } from '../constants.js'; // if TRACK_WIDTH is exported
 
 export function createWalls(textureLoader) {
   // Optionally, you can load a texture for the walls:

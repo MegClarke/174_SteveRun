@@ -6,7 +6,7 @@ export function createFloor(textureLoader) {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
 
-    // ✅ Adjust the repeat values to control tiling
+    // Adjust the repeat values to control tiling
     texture.repeat.set(100, 100); // Increase these numbers to repeat more
 
     // Create floor geometry and material

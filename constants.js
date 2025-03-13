@@ -3,17 +3,8 @@ export const TRAIN_DIMENSIONS = {
   TALL: {  w: 0.6, h: 1.6},
 };
 
-export const PLAYER_DIMENSIONS = {
-  PLAYER: { w: 0.4, h: 1.2, d: 0.4},
-}
-
 export const TRACK_WIDTH = 0.8;
 export const MAX_HEIGHT_JUMP = 1;
-
-export const MATERIAL_PROPERTIES = {
-  COLOR: 0x00ff00, // Green
-  SHININESS: 100,
-};
 
 export const LIGHTING_SETTINGS = {
   POINT_LIGHT: { color: 0xffffff, intensity: 100, distance: 100, position: [5, 5, 5] },
@@ -30,8 +21,8 @@ export const CAMERA_SETTINGS = {
 };
 
 export const ANIMATION_SETTINGS = {
-
-  SPEED: 2,
-  DISAPPEAR_POSITION: 10,
-
+  BASE_SPEED: 2,
+  SPEED_INC: 0.02,
+  MAX_SPEED: 5,
+  DISAPPEAR_POSITION: 5,
 };
