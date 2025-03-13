@@ -30,6 +30,7 @@ const phongMaterial = new THREE.MeshPhongMaterial({
   shininess: MATERIAL_PROPERTIES.SHININESS,
 });
 
+const startZ = 5;
 
 const textureLoader = new THREE.TextureLoader();
 // Create Three Tracks of Trains (Left, Center, Right)
@@ -107,15 +108,16 @@ scene.add(walls1, walls2);
 // Create two overlapping train tracks
 const trainTracks1 = createTrainTracks(textureLoader, 0.8, 50);
 const trainTracks2 = createTrainTracks(textureLoader, 0.8, 50);
-trainTracks1.position.z = 0;
-trainTracks2.position.z = -50;
+trainTracks1.position.z = startZ;       // Instead of 0
+trainTracks2.position.z = startZ - 50;    // Instead of -50
 scene.add(trainTracks1, trainTracks2);
 
 // Create two overlapping floors
 const floor1 = createFloor(textureLoader);
 const floor2 = createFloor(textureLoader);
-floor1.position.z = 0;
-floor2.position.z = -50;
+
+floor1.position.z = startZ;
+floor2.position.z = startZ - 50;
 scene.add(floor1, floor2);
 
 //Light!
@@ -348,39 +350,40 @@ function animate() {
     camera.position.lerp(desiredCameraPos, 0.2);
     camera.lookAt(steve.position);
 
-    // Move the train tracks and floor backward to simulate running
-    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
-    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
 
-    // Move both floors
-    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
-    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
 
-    // ✅ Swap positions instead of resetting instantly
-    if (trainTracks1.position.z > 50) {
-      trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
-    }
-    if (trainTracks2.position.z > 50) {
-      trainTracks2.position.z = trainTracks1.position.z - 50;
-    }
-
-    if (floor1.position.z > 0) {
-      floor1.position.z = floor2.position.z - 50;
-    }
-    if (floor2.position.z > 0) {
-      floor2.position.z = floor1.position.z - 50;
-    }
     walls1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
     walls2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
 
-    // Reset walls positions (similar to floor and train track resetting)
-    if (walls1.position.z > 50) {
+    // ✅ Swap positions instead of resetting instantly
+    if (trainTracks1.position.z > startZ + 50) {
+      trainTracks1.position.z = trainTracks2.position.z - 50;
+    }
+    if (trainTracks2.position.z > startZ + 50) {
+      trainTracks2.position.z = trainTracks1.position.z - 50;
+    }
+    
+    if (floor1.position.z > startZ) {
+      floor1.position.z = floor2.position.z - 50;
+    }
+    if (floor2.position.z > startZ) {
+      floor2.position.z = floor1.position.z - 50;
+    }
+    
+    if (walls1.position.z > startZ + 50) {
       walls1.position.z = walls2.position.z - 50;
     }
-    if (walls2.position.z > 50) {
+    if (walls2.position.z > startZ + 50) {
       walls2.position.z = walls1.position.z - 50;
     }
   }
+
+
+
 
   checkCollisions();
 }
