@@ -7,6 +7,7 @@ import { translationMatrix, rotationMatrixZ, scalingMatrix } from './transformat
 import { createTrainTracks } from './train_tracks.js';
 import { createFloor } from './floor.js'; // Import the floor function
 import { createGoldCoin } from './coin.js';
+import { createWalls } from './walls.js';
 
 
 import {
@@ -18,15 +19,11 @@ import {
 } from './constants.js';
 
 const { scene, camera, renderer, controls } = initializeScene();
-controls.enabled = false;
+//controls.enabled = false;
+//THIS SHOULD BE ON AFTER EVERyTHING IS FIXED
 
 
-// Material
-const phongMaterial = new THREE.MeshPhongMaterial({
-  color: MATERIAL_PROPERTIES.COLOR,
-  shininess: MATERIAL_PROPERTIES.SHININESS,
-});
-
+const startZ = 5;
 const textureLoader = new THREE.TextureLoader();
 
 // Create Three Tracks of Trains (Left, Center, Right)
@@ -37,6 +34,26 @@ const spacingOptions = [0, 1, 3, 4.5, 8, 10, 20];
 const trackPositions = [-TRACK_WIDTH, 0, TRACK_WIDTH];
 
 let currentZPosition = [0, 0, 0];
+function generateCoinsForTrain(xPos, randomType, randomDepth, baseZ) {
+  const numCoins = Math.floor(Math.random() * 3); // 0, 1, or 2 coins
+  let coins = [];
+  if (numCoins > 0) {
+    // Calculate spacing along the train's top face (which goes from -d/2 to d/2)
+    const trainHalfDepth = randomDepth / 2; // since createTrain halves d internally
+    const spacing = randomDepth / (numCoins + 1);
+    for (let j = 0; j < numCoins; j++) {
+      let coin = createGoldCoin();
+      // Compute offset along z so coins are spread out along the train's length
+      const offsetZ = -trainHalfDepth + spacing * (j + 1);
+      coin.position.set(xPos, randomType.h + 0.1, baseZ + offsetZ);
+      coin.userData.offsetZ = offsetZ;
+      scene.add(coin);
+      coins.push(coin);
+    }
+  }
+  return coins;
+}
+
 trackPositions.forEach((xPos, trackIndex) => {
   for (let i = 0; i < 5; i++) {
     const randomType = trainTypes[Math.floor(Math.random() * trainTypes.length)];
@@ -57,24 +74,10 @@ trackPositions.forEach((xPos, trackIndex) => {
 
 
     // Decide on a random number of coins (0 to 2 coins) to place on this train
-    const numCoins = Math.floor(Math.random() * 3); // 0, 1, or 2 coins
-    let coins = [];
-    if (numCoins > 0) {
-      // Calculate spacing along the train's top face (which goes from -d/2 to d/2)
-      const trainHalfDepth = randomDepth / 2;  // because createTrain halves d internally
-      const spacing = randomDepth / (numCoins + 1);
-      for (let j = 0; j < numCoins; j++) {
-        let coin = createGoldCoin();
-        // Compute offset along z so coins are spread out along the train's length
-        const offsetZ = -trainHalfDepth + spacing * (j + 1);
-        // Position coin relative to the train's current z position
-        coin.position.set(xPos, randomType.h + 0.1, currentZPosition[trackIndex] + offsetZ);
-        // Save the offset in coin.userData for later updates in animate()
-        coin.userData.offsetZ = offsetZ;
-        scene.add(coin);
-        coins.push(coin);
-      }
-    }
+// Instead of duplicating coin code here:
+    let coins = generateCoinsForTrain(xPos, randomType, randomDepth, currentZPosition[trackIndex]);
+    allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex] });
+
 
     //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex]});
@@ -83,18 +86,31 @@ trackPositions.forEach((xPos, trackIndex) => {
   }
 });
 
+
+//WALLS
+
+const walls1 = createWalls(textureLoader);
+const walls2 = createWalls(textureLoader);
+
+// Position the walls to align with your floor segments (assuming floor segments are 50 units apart)
+walls1.position.z = 0;
+walls2.position.z = -50;
+
+scene.add(walls1, walls2);
+
 // Create two overlapping train tracks
 const trainTracks1 = createTrainTracks(textureLoader, 0.8, 50);
 const trainTracks2 = createTrainTracks(textureLoader, 0.8, 50);
-trainTracks1.position.z = 0;
-trainTracks2.position.z = -50;
+trainTracks1.position.z = startZ;       // Instead of 0
+trainTracks2.position.z = startZ - 50;    // Instead of -50
 scene.add(trainTracks1, trainTracks2);
 
 // Create two overlapping floors
 const floor1 = createFloor(textureLoader);
 const floor2 = createFloor(textureLoader);
-floor1.position.z = 0;
-floor2.position.z = -50;
+
+floor1.position.z = startZ;
+floor2.position.z = startZ - 50;
 scene.add(floor1, floor2);
 
 //Light!
@@ -187,21 +203,12 @@ scoreDisplay.innerHTML = `Score: ${score}`;
 document.body.appendChild(scoreDisplay);
 
 let boundingBoxSteve = new THREE.Box3().setFromObject(steve);
-let steveBoxHelper = new THREE.Box3Helper(boundingBoxSteve, 0xffff00);
-scene.add(steveBoxHelper);
 
 let allTrainBoundingBoxes = [
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()],
-  [new THREE.Box3(), new THREE.Box3()]
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()],
+  [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()]
 ];
-
-for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
-  for (let j = 0; j < allTrainBoundingBoxes[i].length; j++) {
-    let trainBoxHelper = new THREE.Box3Helper(allTrainBoundingBoxes[i][j], 0xff0000);
-    scene.add(trainBoxHelper);
-  }
-}
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
@@ -215,7 +222,7 @@ function checkCollisions() {
   let trainTopY = 0;
   for (let i = 0; i < 3; i++) {
     const track = allTracks[i];
-    for (let j = 0; j < 2; j++) {
+    for (let j = 0; j < 3; j++) {
       const train = track[j];
       const boundingBoxTrain = allTrainBoundingBoxes[i][j]
       boundingBoxTrain.setFromObject(train.mesh);
@@ -235,11 +242,14 @@ function checkCollisions() {
         //   console.log("Crash Front!");
         //   still = !still; //stop game for now
         // }
-        if (targetX  >= steve.position.x) {
+        if (targetX  >= steve.position.x + 0.3) { //account for unfinished lerp
+          console.log("Target Position: ", targetX);
           console.log("Crash Right!");
           crashRight = true;
         }
-        if (targetX <= steve.position.x) {
+        if (targetX <= steve.position.x - 0.3) { //account for unfinished lerp
+          console.log("Steve Position: ", steve.position.x);
+          console.log("Target Position: ", targetX);
           console.log("Crash Left!");
           crashLeft = true;
         }
@@ -374,8 +384,10 @@ function animate() {
           scene.add(mesh);
           scene.add(wireframe);
 
-          // Add new train to track
-          track.push({ mesh, wireframe, positionZ: newTrainZ });
+          // After you create new train and compute newTrainZ, add coins:
+          let coins = generateCoinsForTrain(xPos, randomType, randomDepth, newTrainZ);
+          track.push({ mesh, wireframe, coins, positionZ: newTrainZ });
+
 
         } else {
           // Apply transformation matrix only if the train was not removed
@@ -392,7 +404,7 @@ function animate() {
       }
     });
 
-    const cameraOffset = new THREE.Vector3(0, 3, 5);
+    const cameraOffset = new THREE.Vector3(0, 2, 3);
 
     // Inside your animate() function, after updating Steve's position:
     const desiredCameraPos = steve.position.clone().add(cameraOffset);
@@ -400,29 +412,40 @@ function animate() {
     camera.position.lerp(desiredCameraPos, 0.2);
     camera.lookAt(steve.position);
 
-    // Move the train tracks and floor backward to simulate running
-    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
-    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    trainTracks1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    trainTracks2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
 
-    // Move both floors
-    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
-    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    floor1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
+    floor2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2 ;
 
-    // ✅ Swap positions instead of resetting instantly
-    if (trainTracks1.position.z > 50) {
-      trainTracks1.position.z = trainTracks2.position.z - 50; // Move behind the second track
+    walls1.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+    walls2.position.z += ANIMATION_SETTINGS.SPEED * delta / 2;
+
+    // Swap positions instead of resetting instantly
+    if (trainTracks1.position.z > startZ + 50) {
+      trainTracks1.position.z = trainTracks2.position.z - 50;
     }
-    if (trainTracks2.position.z > 50) {
+    if (trainTracks2.position.z > startZ + 50) {
       trainTracks2.position.z = trainTracks1.position.z - 50;
     }
-
-    if (floor1.position.z > 0) {
+    
+    if (floor1.position.z > startZ) {
       floor1.position.z = floor2.position.z - 50;
     }
-    if (floor2.position.z > 0) {
+    if (floor2.position.z > startZ) {
       floor2.position.z = floor1.position.z - 50;
     }
+    
+    if (walls1.position.z > startZ + 50) {
+      walls1.position.z = walls2.position.z - 50;
+    }
+    if (walls2.position.z > startZ + 50) {
+      walls2.position.z = walls1.position.z - 50;
+    }
   }
+
+
+
 
   checkCollisions();
   renderer.render(scene, camera);
@@ -445,11 +468,15 @@ window.addEventListener('keydown', (event) => {
     case 'A':
       currentColumn = Math.max(minColumn, currentColumn - 1);
       targetX = currentColumn * columnSpacing;
+      console.log("Current Column: ", currentColumn);
+      console.log("Target X: ", targetX);
       break;
     case 'd':
     case 'D':
       currentColumn = Math.min(maxColumn, currentColumn + 1);
       targetX = currentColumn * columnSpacing;
+      console.log("Current Column: ", currentColumn);
+      console.log("Target X: ", targetX);
       break;
     case 'w':
     case 'W':
