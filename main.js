@@ -274,6 +274,7 @@ function checkCollisions() {
   
   for (const track of allTracks) {
     for (let i = track.length - 1; i >= 0; i--) {
+      let train = track[i];
       // Check if Steve collects a coin
       if (train.coins && train.coins.length > 0) {
         for (let k = train.coins.length - 1; k >= 0; k--) {
