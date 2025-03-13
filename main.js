@@ -10,6 +10,7 @@ import { createGoldCoin } from './create_files/coin.js';
 import { createWalls } from './create_files/walls.js';
 import { createScoreDisplay, updateScoreDisplay } from './create_files/score_display.js';
 import { Steve } from './create_files/steve.js';
+import { showGameOver } from './game_over.js';
 
 
 import {
@@ -185,20 +186,22 @@ function checkCollisions() {
           console.log("On top!");
           standingOnTrain = true;
         }
-        // else if (steveFrontZ <= boundingBoxTrain.max.z) {
-        //   console.log("Crash Front!");
-        //   still = !still; //stop game for now
-        // }
-        if (targetX  >= steve.position.x + 0.2) { //account for unfinished lerp
+        if (targetX  >= steve.position.x + 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
           console.log("Target Position: ", targetX);
           console.log("Crash Right!");
           crashRight = true;
         }
-        if (targetX <= steve.position.x - 0.2) { //account for unfinished lerp
+        if (targetX <= steve.position.x - 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
           console.log("Crash Left!");
           crashLeft = true;
+        }
+        if (!standingOnTrain && !crashRight && !crashLeft && (steveFrontZ <= boundingBoxTrain.max.z)) {
+          console.log("Crash Front!");
+          gameOver = true;
+          renderer.setAnimationLoop(null);
+          showGameOver(score);
         }
       }
     }
@@ -250,8 +253,9 @@ function checkCollisions() {
   }
 }
 
-
+let gameOver = false;
 function animate() {
+  if (gameOver) return;
   controls.update();
 
   if (isJumping) {
@@ -418,10 +422,6 @@ window.addEventListener('keydown', (event) => {
         isJumping = true;
       }
       break;
-    case ' ':
-      still = !still;
-      still ? clock.stop() : clock.start();
-      break; 
     default:
       console.log(`Key ${event.key} pressed`);
   }
