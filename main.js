@@ -14,7 +14,6 @@ import { Steve } from './create_files/steve.js';
 
 import {
   TRAIN_DIMENSIONS,
-  PLAYER_DIMENSIONS,
   TRACK_WIDTH,
   ANIMATION_SETTINGS,
 } from './constants.js';
@@ -73,12 +72,10 @@ trackPositions.forEach((xPos, trackIndex) => {
     scene.add(mesh);
     scene.add(wireframe);
 
-
     // Decide on a random number of coins (0 to 2 coins) to place on this train
     // Instead of duplicating coin code here:
     let coins = generateCoinsForTrain(xPos, randomType, randomDepth, currentZPosition[trackIndex]);
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex] });
-
 
     //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex]});
