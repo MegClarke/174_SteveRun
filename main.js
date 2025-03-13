@@ -134,6 +134,7 @@ for (let i = 0; i < allTrainBoundingBoxes.length; i++) {
 
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
+
   let standingOnTrain = false;
   let trainTopY = 0;
   for (let i = 0; i < 3; i++) {
@@ -147,11 +148,41 @@ function checkCollisions() {
         console.log("Collision detected!");
         trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
         const steveBottomY = steve.position.y; 
+        const steveRightX = steve.position.x + 0.375;
+        const steveLeftX = steve.position.x;
+        const steveFrontZ = boundingBoxSteve.min.z;
+
+        const trainRightX = train.mesh.position.x + 0.6;
+        const trainLeftX = train.mesh.position.x;
 
         // Check if Steve is landing on top of the train
-        if (steveBottomY >= trainTopY - 0.02) {
+        if (steveBottomY >= trainTopY - 0.1) {
           console.log("On top!");
           standingOnTrain = true;
+        }
+        // else if (steveFrontZ <= boundingBoxTrain.max.z) {
+        //   console.log("Crash Front!");
+        //   still = !still; //stop game for now
+        // }
+        if (steveRightX  >= trainLeftX) {
+          console.log("Crash Right!");
+          if (steveRightX >= 0) {
+            targetX = 0;
+          }
+          else if (steveRightX <= 0) {
+            targetX = -TRACK_WIDTH;
+          }
+          steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
+        }
+        if (steveLeftX <= trainRightX) {
+          console.log("Crash Left!");
+          if (steveLeftX >= 0) {
+            targetX = TRACK_WIDTH;
+          }
+          else if (steveLeftX <= 0) {
+            targetX = 0;
+          }
+          steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
         }
       }
     }
@@ -164,6 +195,7 @@ function checkCollisions() {
   }
   //implement falling logic?
 }
+
 
 function animate() {
   controls.update();
@@ -265,11 +297,11 @@ window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'a':
     case 'A':
-      targetX = Math.max(-0.8, steve.position.x - 0.8); // Limit movement to -0.8
+      targetX = Math.max(-TRACK_WIDTH, steve.position.x - TRACK_WIDTH); // Limit movement to -0.8
       break;
     case 'd':
     case 'D':
-      targetX = Math.min(0.8, steve.position.x + 0.8); // Limit movement to 0.8
+      targetX = Math.min(TRACK_WIDTH, steve.position.x + TRACK_WIDTH); // Limit movement to 0.8
       break;
     case 'w':
     case 'W':
@@ -281,7 +313,7 @@ window.addEventListener('keydown', (event) => {
     case ' ':
       still = !still;
       still ? clock.stop() : clock.start();
-      break;
+      break; 
     default:
       console.log(`Key ${event.key} pressed`);
   }
