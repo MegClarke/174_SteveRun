@@ -9,6 +9,7 @@ import { createFloor } from './floor.js'; // Import the floor function
 import { createGoldCoin } from './coin.js';
 import { createWalls } from './walls.js';
 import { createScoreDisplay, updateScoreDisplay } from './score_display.js';
+import { Steve } from './steve.js';
 
 
 import {
@@ -74,7 +75,7 @@ trackPositions.forEach((xPos, trackIndex) => {
 
 
     // Decide on a random number of coins (0 to 2 coins) to place on this train
-// Instead of duplicating coin code here:
+    // Instead of duplicating coin code here:
     let coins = generateCoinsForTrain(xPos, randomType, randomDepth, currentZPosition[trackIndex]);
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex] });
 
@@ -123,47 +124,7 @@ scene.add(topLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-
-// Create Minecraft Steve using BoxGeometry with smaller proportions
-const steve = new THREE.Group();
-
-const headMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc99 }); // Light skin color
-const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x0066ff }); // Blue shirt
-const legMaterial = new THREE.MeshBasicMaterial({ color: 0x3333cc }); // Dark blue pants
-const armMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc99 }); // Same as head for arms
-
-// Head
-const head = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), headMaterial);
-head.position.set(0, 0.35, 0);
-steve.add(head);
-
-// Torso
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.225, 0.2, 0.075), bodyMaterial);
-torso.position.set(0, 0.175, 0);
-steve.add(torso);
-
-// Left Arm
-const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
-leftArm.position.set(-0.15, 0.20, 0);
-steve.add(leftArm);
-
-// Right Arm
-const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
-rightArm.position.set(0.15, 0.20, 0);
-steve.add(rightArm);
-
-// Left Leg
-const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
-leftLeg.position.set(-0.075, 0, 0);
-steve.add(leftLeg);
-
-// Right Leg
-const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
-rightLeg.position.set(0.075, 0, 0);
-steve.add(rightLeg);
-
-// Position Steve at the origin
-steve.position.set(0, 0, 0);
+const steve = new Steve(); 
 scene.add(steve);
 
 // Animation Variables
@@ -231,12 +192,12 @@ function checkCollisions() {
         //   console.log("Crash Front!");
         //   still = !still; //stop game for now
         // }
-        if (targetX  >= steve.position.x + 0.3) { //account for unfinished lerp
+        if (targetX  >= steve.position.x + 0.2) { //account for unfinished lerp
           console.log("Target Position: ", targetX);
           console.log("Crash Right!");
           crashRight = true;
         }
-        if (targetX <= steve.position.x - 0.3) { //account for unfinished lerp
+        if (targetX <= steve.position.x - 0.2) { //account for unfinished lerp
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
           console.log("Crash Left!");
@@ -312,17 +273,7 @@ function animate() {
 
     // Smoothly interpolate Steve's x position towards the target x position
     steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
-
-
-    // Animate the legs to simulate running
-    const legRotation = Math.sin(runTime * 5) * 0.5; // Adjust speed and amplitude as needed
-    leftLeg.rotation.x = legRotation;
-    rightLeg.rotation.x = -legRotation;
-
-    // Animate the arms to simulate running
-    const armRotation = Math.sin(runTime * 5) * 0.5; // Adjust speed and amplitude as needed
-    leftArm.rotation.x = -armRotation;
-    rightArm.rotation.x = armRotation;
+    steve.animateLimbs(runTime);
 
     trackPositions.forEach((xPos, trackIndex) => {
       let track = allTracks[trackIndex];
