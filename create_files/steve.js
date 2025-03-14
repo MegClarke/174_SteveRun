@@ -44,14 +44,14 @@ export class Steve extends THREE.Group {
     this.position.set(0, 0, 0);
   }
 
-  animateLimbs(runtime) {
+  animateLimbs(runtime, currentSpeed) {
     // Animate the legs to simulate running
-    const legRotation = Math.sin(runtime * 5) * 0.5; // Adjust speed/amplitude as needed
+    const legRotation = Math.sin(runtime * currentSpeed * 1.5) * 0.5; // Adjust speed/amplitude as needed
     this.leftLeg.rotation.x = legRotation;
     this.rightLeg.rotation.x = -legRotation;
 
     // Animate the arms to simulate running
-    const armRotation = Math.sin(runtime * 5) * 0.5;
+    const armRotation = Math.sin(runtime *currentSpeed * 1.5) * 0.5;
     this.leftArm.rotation.x = -armRotation;
     this.rightArm.rotation.x = armRotation;
   }

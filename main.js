@@ -230,14 +230,15 @@ function checkCollisions() {
           standingOnTrain = true;
         }
         if (targetX  >= steve.position.x + 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
-          console.log("Target Position: ", targetX);
           console.log("Crash Right!");
+          console.log("Steve Position: ", steve.position.x);
+          console.log("Target Position: ", targetX);
           crashRight = true;
         }
         if (targetX <= steve.position.x - 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
+          console.log("Crash Left!");
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
-          console.log("Crash Left!");
           crashLeft = true;
         }
         if (!standingOnTrain && !crashRight && !crashLeft && (steveFrontZ <= boundingBoxTrain.max.z)) {
@@ -266,15 +267,11 @@ function checkCollisions() {
   //implement falling logic?
   if(crashRight){
     hit.play();
-    if (steveRightX >= 0) {
-      targetX = 0;
-    }
-    else if (steveRightX <= 0) {
-      targetX = -TRACK_WIDTH;
-    }
+    currentColumn = currentColumn - 1;
+    targetX = currentColumn * columnSpacing;
     mistakes++;
     updateMistakeDisplay(mistakeDisplay, mistakes);
-    if(mistakes >= 3){
+    if(mistakes >= 2){
       gameOver = true;
       showGameOver(score, mistakes);
       death.play();
@@ -282,16 +279,12 @@ function checkCollisions() {
     }
   }
   if(crashLeft){
-    if (steveLeftX >= 0) {
-      targetX = TRACK_WIDTH;
-    }
-    else if (steveLeftX <= 0) {
-      targetX = 0;
-    }
+    currentColumn = currentColumn + 1;
+    targetX = currentColumn * columnSpacing;
     mistakes++;
     updateMistakeDisplay(mistakeDisplay, mistakes);
     hit.play();
-    if(mistakes >= 3){
+    if(mistakes >= 2){
       gameOver = true;
       showGameOver(score, mistakes);
       death.play();
@@ -344,12 +337,12 @@ function animate() {
     const delta = clock.getDelta(); // it was too slow
     runTime += delta; // Increase runTime to simulate leg and arm movement
 
-    const currentSpeed = Math.min(ANIMATION_SETTINGS.BASE_SPEED + ANIMATION_SETTINGS.SPEED_INC * delta, ANIMATION_SETTINGS.MAX_SPEED);
-    moveSpeed = Math.min(moveSpeed + (ANIMATION_SETTINGS.SPEED_INC * delta) / 20, 0.25);
+    const currentSpeed = Math.min(ANIMATION_SETTINGS.BASE_SPEED + ANIMATION_SETTINGS.SPEED_INC * runTime, ANIMATION_SETTINGS.MAX_SPEED);
+    moveSpeed = Math.min(moveSpeed + (ANIMATION_SETTINGS.SPEED_INC * runTime) / 20, 0.25);
 
     // Smoothly interpolate Steve's x position towards the target x position
     steve.position.x = THREE.MathUtils.lerp(steve.position.x, targetX, moveSpeed);
-    steve.animateLimbs(runTime);
+    steve.animateLimbs(runTime, currentSpeed);
 
     trackPositions.forEach((xPos, trackIndex) => {
       let track = allTracks[trackIndex];
