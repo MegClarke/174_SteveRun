@@ -12,32 +12,32 @@ export class Steve extends THREE.Group {
 
     // Head
     this.head = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), headMaterial);
-    this.head.position.set(0, 0.35, 0);
+    this.head.position.set(0, 0.425, 0);
     this.add(this.head);
 
     // Torso
     this.torso = new THREE.Mesh(new THREE.BoxGeometry(0.225, 0.2, 0.075), bodyMaterial);
-    this.torso.position.set(0, 0.175, 0);
+    this.torso.position.set(0, 0.25, 0);
     this.add(this.torso);
 
     // Left Arm
     this.leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
-    this.leftArm.position.set(-0.15, 0.20, 0);
+    this.leftArm.position.set(-0.15, 0.275, 0);
     this.add(this.leftArm);
 
     // Right Arm
     this.rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), armMaterial);
-    this.rightArm.position.set(0.15, 0.20, 0);
+    this.rightArm.position.set(0.15, 0.275, 0);
     this.add(this.rightArm);
 
     // Left Leg
     this.leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
-    this.leftLeg.position.set(-0.075, 0, 0);
+    this.leftLeg.position.set(-0.075, 0.075, 0);
     this.add(this.leftLeg);
 
     // Right Leg
     this.rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.075), legMaterial);
-    this.rightLeg.position.set(0.075, 0, 0);
+    this.rightLeg.position.set(0.075, 0.075, 0);
     this.add(this.rightLeg);
 
     // Position Steve at the origin (this is optional since it's the default)

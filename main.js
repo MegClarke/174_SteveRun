@@ -201,41 +201,48 @@ let allTrainBoundingBoxes = [
   [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()]
 ];
 
+let standingOnTrain = false;
 function checkCollisions() {
   boundingBoxSteve.setFromObject(steve);
   
   const steveRightX = steve.position.x + 0.375;
   const steveLeftX = steve.position.x;
 
-  let standingOnTrain = false;
   let crashRight = false;
   let crashLeft = false;
   let trainTopY = 0;
+  let steveBottomY = 0;
   for (let i = 0; i < 3; i++) {
     const track = allTracks[i];
     for (let j = 0; j < 3; j++) {
       const train = track[j];
       const boundingBoxTrain = allTrainBoundingBoxes[i][j]
       boundingBoxTrain.setFromObject(train.mesh);
+
+      steveBottomY = boundingBoxSteve.min.y; 
+      trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
+      const steveFrontZ = boundingBoxSteve.min.z;
       
       if (boundingBoxSteve.intersectsBox(boundingBoxTrain)) {
         console.log("Collision detected!");
-        trainTopY = boundingBoxTrain.max.y - boundingBoxTrain.min.y;
-        const steveBottomY = steve.position.y; 
-        const steveFrontZ = boundingBoxSteve.min.z;
+        console.log("Steve Position: ", steve.position.y);
 
         // Check if Steve is landing on top of the train
         if (steveBottomY >= trainTopY - 0.1) {
           console.log("On top!");
           standingOnTrain = true;
+          steve.position.y = trainTopY; // place steve on top of train (+0.1 so his feet don't go under)
+          velocityY = 0;
+          isJumping = false;
+          console.log("Steve staying on top!");
         }
-        if (targetX  >= steve.position.x + 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
+        if (targetX  >= steve.position.x + 0.2 && steve.position.z <= boundingBoxTrain.max.z && steveBottomY < trainTopY - 0.3) { //account for unfinished lerp, account for not crashing face first, account for gravity while swithcing tracks
           console.log("Crash Right!");
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
           crashRight = true;
         }
-        if (targetX <= steve.position.x - 0.2 && steve.position.z <= boundingBoxTrain.max.z) { //account for unfinished lerp
+        if (targetX <= steve.position.x - 0.2 && steve.position.z <= boundingBoxTrain.max.z && steveBottomY < trainTopY - 0.3) { //account for unfinished lerp, account for not crashing face first, account for gravity while swithcing tracks
           console.log("Crash Left!");
           console.log("Steve Position: ", steve.position.x);
           console.log("Target Position: ", targetX);
@@ -250,15 +257,12 @@ function checkCollisions() {
           showGameOver(score);
         }
       }
+      else{
+        standingOnTrain = false;
+      }
     }
   }
   
-  if (standingOnTrain) {
-    steve.position.y = trainTopY; // place steve on top of train (+0.1 so his feet don't go under)
-    velocityY = 0;
-    isJumping = false;
-    console.log("Steve staying on top!");
-  }
   if(!standingOnTrain && steve.position.y > 0 && !isJumping){
     velocityY += gravity;
     steve.position.y += velocityY;
