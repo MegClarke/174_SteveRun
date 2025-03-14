@@ -157,10 +157,15 @@ function checkCollisions() {
     }
   }
   if (standingOnTrain) {
-    steve.position.y = trainTopY + 0.1; // place steve on top of train (+0.1 so his feet don't go under)
+    steve.position.y = trainTopY; // place steve on top of train (+0.1 so his feet don't go under)
     velocityY = 0;
     isJumping = false;
     console.log("Steve staying on top!");
+  }
+  if(!standingOnTrain && steve.position.y > 0 && !isJumping){
+    velocityY += gravity;
+    steve.position.y += velocityY;
+    isJumping = false;
   }
   //implement falling logic?
 }
