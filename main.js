@@ -121,7 +121,7 @@ trackPositions.forEach((xPos, trackIndex) => {
     let coins = generateCoinsForTrain(xPos, randomType, randomDepth, currentZPosition[trackIndex]);
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex] });
 
-    //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); // ✅ Store coin (could be null)
+    //allTracks[trackIndex].push({ mesh, wireframe, coin, positionZ: currentZPosition }); //  Store coin (could be null)
     allTracks[trackIndex].push({ mesh, wireframe, coins, positionZ: currentZPosition[trackIndex]});
     //huh idk which one of these is right actually, added coin to the second one
 
