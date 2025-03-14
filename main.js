@@ -20,6 +20,36 @@ import {
 } from './constants.js';
 
 const { scene, camera, renderer, controls } = initializeScene();
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+// Create a global audio source
+const sound = new THREE.Audio(listener);
+
+// Load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('./assets/C418_-_Minecraft_-_Minecraft_Volume_Alpha.mp3', function(buffer) {
+  sound.setBuffer(buffer);
+  sound.setLoop(true);       // Loop the music
+  sound.setVolume(1);        // Set volume (0 to 1)
+  sound.play();                // Start playing
+});
+
+const coinSound = new THREE.Audio(listener);
+
+audioLoader.load('./assets/Pop_(Minecraft_Sound)_-_Sound_Effect_for_editing.mp3', function(buffer) {
+  coinSound.setBuffer(buffer);
+  coinSound.setLoop(false);      // Play only once per coin collection
+  coinSound.setVolume(.5);        // Adjust volume as needed
+});
+
+const death = new THREE.Audio(listener);
+
+audioLoader.load('./assets/Pac-Man_Death_-_Sound_Effect_(HD).mp3', function(buffer) {
+  death.setBuffer(buffer);
+  death.setLoop(false);      // Play only once per coin collection
+  death.setVolume(.5);        // Adjust volume as needed
+});
 //controls.enabled = false;
 //THIS SHOULD BE ON AFTER EVERyTHING IS FIXED
 
@@ -200,7 +230,9 @@ function checkCollisions() {
         if (!standingOnTrain && !crashRight && !crashLeft && (steveFrontZ <= boundingBoxTrain.max.z)) {
           console.log("Crash Front!");
           gameOver = true;
+          death.play();
           renderer.setAnimationLoop(null);
+          sound.stop();
           showGameOver(score);
         }
       }
@@ -244,6 +276,10 @@ function checkCollisions() {
             console.log("Coin collected!");
             score += 1;
             updateScoreDisplay(scoreDisplay, score);
+            if (coinSound.isPlaying) {
+              coinSound.stop();
+            }
+            coinSound.play();
             scene.remove(coin);
             train.coins.splice(k, 1);
           }
