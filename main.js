@@ -11,6 +11,8 @@ import { createWalls } from './create_files/walls.js';
 import { createScoreDisplay, updateScoreDisplay } from './create_files/score_display.js';
 import { Steve } from './create_files/steve.js';
 import { showGameOver } from './game_over.js';
+import { createMistakeDisplay, updateMistakeDisplay } from './mistakes.js';
+
 
 
 import {
@@ -25,6 +27,11 @@ camera.add(listener);
 
 // Create a global audio source
 const sound = new THREE.Audio(listener);
+
+let mistakes = 0;
+const mistakeDisplay = createMistakeDisplay(mistakes);
+document.body.appendChild(mistakeDisplay);
+
 
 // Load a sound and set it as the Audio object's buffer
 const audioLoader = new THREE.AudioLoader();
@@ -44,11 +51,17 @@ audioLoader.load('./assets/Pop_(Minecraft_Sound)_-_Sound_Effect_for_editing.mp3'
 });
 
 const death = new THREE.Audio(listener);
-
 audioLoader.load('./assets/Pac-Man_Death_-_Sound_Effect_(HD).mp3', function(buffer) {
   death.setBuffer(buffer);
   death.setLoop(false);      // Play only once per coin collection
   death.setVolume(.5);        // Adjust volume as needed
+});
+
+const hit = new THREE.Audio(listener);
+audioLoader.load('./assets/Minecraft_Hit_-_Sound_Effect_(HD).mp3', function(buffer) {
+  hit.setBuffer(buffer);
+  hit.setLoop(false);      // Play only once per coin collection
+  hit.setVolume(1);        // Adjust volume as needed
 });
 //controls.enabled = false;
 //THIS SHOULD BE ON AFTER EVERyTHING IS FIXED
@@ -247,11 +260,20 @@ function checkCollisions() {
   }
   //implement falling logic?
   if(crashRight){
+    hit.play();
     if (steveRightX >= 0) {
       targetX = 0;
     }
     else if (steveRightX <= 0) {
       targetX = -TRACK_WIDTH;
+    }
+    mistakes++;
+    updateMistakeDisplay(mistakeDisplay, mistakes);
+    if(mistakes >= 3){
+      gameOver = true;
+      showGameOver(score, mistakes);
+      death.play();
+      sound.stop();
     }
   }
   if(crashLeft){
@@ -260,6 +282,15 @@ function checkCollisions() {
     }
     else if (steveLeftX <= 0) {
       targetX = 0;
+    }
+    mistakes++;
+    updateMistakeDisplay(mistakeDisplay, mistakes);
+    hit.play();
+    if(mistakes >= 3){
+      gameOver = true;
+      showGameOver(score, mistakes);
+      death.play();
+      sound.stop();
     }
   }
   
